@@ -1,2 +1,4 @@
 platformio.ini
 src/main.c
+.pio
+boards
