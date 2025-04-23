@@ -1,0 +1,12 @@
+{
+    "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
+    "name": "KnabberKiste Firmware Base",
+    "description": "HALs, utilities and drivers for KnabberKiste firmware.",
+    "version": "1.0.0",
+    "frameworks": ["cmsis"],
+    "platforms": "ststm32",
+    "build": {
+        "srcDir": "src",
+        "includeDir": "include"
+    }
+}
