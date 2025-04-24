@@ -2,3 +2,5 @@ platformio.ini
 **/src/main.c
 .pio
 boards
+docs/output
+docs/doxygen-awesome-css
