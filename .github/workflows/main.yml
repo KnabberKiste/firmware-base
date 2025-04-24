@@ -13,7 +13,7 @@ jobs:
           submodules: true
 
       - name: Clone doxygen-awesome-css
-        run: git clone add https://github.com/jothepro/doxygen-awesome-css.git docs/doxygen-awesome-css
+        run: git clone https://github.com/jothepro/doxygen-awesome-css.git docs/doxygen-awesome-css
           
       - name: Doxygen Action
         uses: mattnotmitt/doxygen-action@1.9.8
