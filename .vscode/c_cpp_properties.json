@@ -1,0 +1,57 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
+{
+    "configurations": [
+        {
+            "name": "PlatformIO",
+            "includePath": [
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/include",
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/src",
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/KnabberKiste Firmware Base/include",
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/KnabberKiste Firmware Base/src",
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/KnabberKiste Firmware Base/freertos",
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/FreeRTOS",
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/FreeRTOS/FreeRTOS/include",
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/FreeRTOS/FreeRTOS/portable/GCC/ARM_CM4F",
+                "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/FreeRTOS/FreeRTOS/portable/MemMang",
+                "/home/gheinzer/.platformio/packages/framework-cmsis@2.50501.200527/CMSIS/Include",
+                "/home/gheinzer/.platformio/packages/framework-cmsis-stm32f3/Include",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/include",
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/src",
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/KnabberKiste Firmware Base/include",
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/KnabberKiste Firmware Base/src",
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/KnabberKiste Firmware Base/freertos",
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/FreeRTOS",
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/FreeRTOS/FreeRTOS/include",
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/FreeRTOS/FreeRTOS/portable/GCC/ARM_CM4F",
+                    "/home/gheinzer/Documents/knabberkiste/firmware-base/.pio/libdeps/knabberkiste/FreeRTOS/FreeRTOS/portable/MemMang",
+                    "/home/gheinzer/.platformio/packages/framework-cmsis@2.50501.200527/CMSIS/Include",
+                    "/home/gheinzer/.platformio/packages/framework-cmsis-stm32f3/Include",
+                    ""
+                ]
+            },
+            "defines": [
+                "PLATFORMIO=60118",
+                "STM32F3",
+                "STM32F303xC",
+                "F_CPU=72000000L",
+                ""
+            ],
+            "compilerPath": "/home/gheinzer/.platformio/packages/toolchain-gccarmnoneeabi@1.70201.0/bin/arm-none-eabi-gcc",
+            "compilerArgs": [
+                "-mthumb",
+                "-mcpu=cortex-m4",
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}

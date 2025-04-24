@@ -1,3 +1,5 @@
+#pragma once
+
 typedef struct {
     uint32_t id;
     bool id_extended;

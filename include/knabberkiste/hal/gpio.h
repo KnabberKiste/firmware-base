@@ -64,24 +64,24 @@ void gpio_toggle_pin(GPIO_Pin_t* pin);
 GPIO_ConnectivityTestResult_t gpio_test_connectivity(GPIO_Pin_t* pin);
 
 // GPIO pin definitions
-#define GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, pin) extern GPIO_Pin_t* P##portLetter##pin
+#define GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, pin) extern GPIO_Pin_t* P##portLetter##pin
 #define GPIO_SINGLE_PORT_DEFINITION(portLetter, portOffset) \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 0); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 1); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 2); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 3); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 4); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 5); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 6); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 7); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 8); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 9); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 10); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 11); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 12); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 13); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 14); \
-    GPIO_SINGLE_PIN_DEFINIITON(portLetter, portOffset, 15)
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 0); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 1); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 2); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 3); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 4); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 5); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 6); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 7); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 8); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 9); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 10); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 11); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 12); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 13); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 14); \
+    GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 15)
 
 GPIO_SINGLE_PORT_DEFINITION(A, 0);
 GPIO_SINGLE_PORT_DEFINITION(B, 1);
@@ -90,5 +90,5 @@ GPIO_SINGLE_PORT_DEFINITION(D, 3);
 GPIO_SINGLE_PORT_DEFINITION(E, 4);
 GPIO_SINGLE_PORT_DEFINITION(F, 5);
 
-#undef GPIO_SINGLE_PIN_DEFINITION
+#undef GPIO_SINGLE_PIN_DEFINITON
 #undef GPIO_SINGLE_PORT_DEFINITION

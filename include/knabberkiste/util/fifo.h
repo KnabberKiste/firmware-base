@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdlib.h>
 #include <knabberkiste/util/macro_util.h>
 

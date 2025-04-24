@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "freertosconfig.h": "c",
+        "vcp_debug.h": "c"
+    }
+}
