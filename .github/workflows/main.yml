@@ -19,6 +19,7 @@ jobs:
         uses: mattnotmitt/doxygen-action@1.9.8
         with:
           working-directory: './docs'
+          doxyfile-path: './Doxyfile'
           
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3.0.1

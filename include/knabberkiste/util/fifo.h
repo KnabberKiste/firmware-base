@@ -58,9 +58,11 @@ volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
  * @brief Declares a new FIFO with the given @p type, @p name and @p size.
  * 
  * @code{.c}
- * // At the global scope of your file, do:
+ * // At the desired scope of your FIFO, do:
  * fifo_declare(type, name, fifo_size);
  * @endcode
+ * 
+ * This can also be used in local scope, i.e. allocated on stack.
  * 
  * @param type Element type which the FIFO will contain.
  * @param name Name under which the FIFO can be accessed.
