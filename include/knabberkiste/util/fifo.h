@@ -1,7 +1,7 @@
 /**
  * @file fifo.h
  * @author Gabriel Heinzer
- * @brief Generic FIFO queuing library.
+ * @brief Generic, thread-safe FIFO queuing library.
  */
 
 #pragma once
