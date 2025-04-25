@@ -1,20 +1,8 @@
 #include <knabberkiste/hal/delay.h>
 #include <knabberkiste/io.h>
 
-#if __has_include("FreeRTOS.h")
+#if !__has_include("FreeRTOS.h")
 
-    #include "FreeRTOSConfig.h"
-    #include "FreeRTOS.h"
-    #include "task.h"
-
-    void delay_init(TickRate_t res) {}
-
-    void delay(float milliseconds) {
-        const TickType_t diffTicks = (milliseconds * (float)configTICK_RATE_HZ) / (1000.0);
-        vTaskDelay(diffTicks);
-    }
-
-#else
     static volatile uint64_t tick_cnt = 0;
     static TickRate_t tick_rate;
 
