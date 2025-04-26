@@ -56,7 +56,16 @@ typedef enum {
     /**
      * @brief Error you can throw when a buffer is already full.
      */
-    ERR_BUFFER_FULL
+    ERR_BUFFER_FULL,
+    /**
+     * @brief Error you can throw when a buffer is empty.
+     */
+    ERR_BUFFER_EMPTY,
+    /**
+     * @brief Error you can throw when someone passed you arguments
+     * that are impossible to fulfill, i.e. logically impossbile.
+     */
+    ERR_IMPOSSIBLE
 } error_code_t;
 
 /**
