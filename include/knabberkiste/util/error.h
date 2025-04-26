@@ -129,7 +129,7 @@ extern volatile __error_manager_state_t* volatile __em_ptr_global;
  * @param origin_file File from which the error originates.
  * @param origin_function Function from which the error originates.
  */
-void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, const char* origin_function);
+void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, const char* origin_function) __attribute__((noreturn));
 
 /**
  * @brief Handler for uncaught errors. This is weak, i.e. can be redefined by the application.
@@ -141,8 +141,12 @@ void uncaught_error_handler(error_t* error);
 /**
  * @brief Throws an error with the given error information.
  * 
+ * This will never return.
+ * 
  * @param error_code Error code to throw.
  * @param error_message Error message to pass along with the error code.
+ * 
+ * @noreturn
  */
 #define error_throw(error_code, error_message) _error_throw(error_code, #error_code, error_message, __FILE__, __FUNCTION__)
 
