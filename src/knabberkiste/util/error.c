@@ -9,7 +9,7 @@ volatile __error_manager_state_t* volatile __em_ptr_global;
 #define ERROR_INFO_SIZE 128
 
 #if __has_include("FreeRTOS.h")
-    static void error_handler(error_t* error) {
+    void __attribute__((weak)) uncaught_error_handler(error_t* error) {
         static char error_info[ERROR_INFO_SIZE];
         snprintf(error_info, ERROR_INFO_SIZE, "%s [file '%s', function '%s']", error->error_name, error->origin_file, error->origin_function);
         vcp_print("Uncaught error ");
@@ -65,14 +65,14 @@ volatile __error_manager_state_t* volatile __em_ptr_global;
         current_error.origin_function = origin_function;
 
         /* Current code is not wrapped in a try/catch block. */
-        error_handler(&current_error);
+        uncaught_error_handler(&current_error);
             
         while(1); // Stall if error handler returns (it shouldn't)
     }
 
 #else
 
-    static void error_handler(error_t* error) {
+    void __attribute__((weak)) uncaught_error_handler(error_t* error) {
         static char error_info[ERROR_INFO_SIZE];
         snprintf(error_info, ERROR_INFO_SIZE, "%s [file '%s', function '%s']", error->error_name, error->origin_file, error->origin_function);
         vcp_print("Uncaught error");
@@ -98,7 +98,7 @@ volatile __error_manager_state_t* volatile __em_ptr_global;
         }
 
         /* Current code is not wrapped in a try/catch block. */
-        error_handler(&(__error_manager_state.current_error));
+        uncaught_error_handler(&(__error_manager_state.current_error));
             
         while(1); // Stall if error handler returns (it shouldn't)
     }

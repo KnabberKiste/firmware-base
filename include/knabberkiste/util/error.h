@@ -94,6 +94,13 @@ extern volatile __error_manager_state_t* volatile __em_ptr_global;
 void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, const char* origin_function);
 
 /**
+ * @brief Handler for uncaught errors. This is weak, i.e. can be redefined by the application.
+ * 
+ * @param error The uncaught error which occurred.
+ */
+void uncaught_error_handler(error_t* error);
+
+/**
  * @brief Throws an error with the given error information.
  * 
  * @param error_code Error code to throw.
