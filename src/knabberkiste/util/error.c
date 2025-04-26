@@ -1,6 +1,8 @@
 #include <knabberkiste/util/error.h>
 
 volatile __error_manager_state_t __error_manager_state;
+volatile __error_manager_state_t __previous_error_manager_state_global;
+volatile __error_manager_state_t* volatile __em_ptr_global;
 
 void error_handler(error_t* error) {
 
@@ -18,6 +20,8 @@ void error_handler(error_t* error) {
             /* FreeRTOS scheduler is not running */
             __em_ptr = &__error_manager_state;
         }
+
+        __em_ptr->error_occurred = true;
 
         __em_ptr->current_error.error_code = error_code;
         __em_ptr->current_error.error_message = error_message;
@@ -37,6 +41,7 @@ void error_handler(error_t* error) {
 #else
 
 void error_throw(error_code_t error_code, const char* error_message) {    
+    __error_manager_state.error_occurred = true;
     __error_manager_state.current_error.error_code = error_code;
     __error_manager_state.current_error.error_message = error_message;
     

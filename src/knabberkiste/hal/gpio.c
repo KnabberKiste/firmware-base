@@ -1,6 +1,5 @@
 #include <knabberkiste/hal/gpio.h>
 #include <knabberkiste/util/bit_manipulation.h>
-#include <knabberkiste/hal/delay.h>
 
 struct GPIO_Pin {
     uint8_t _portOffset;
@@ -61,11 +60,11 @@ GPIO_ConnectivityTestResult_t gpio_test_connectivity(GPIO_Pin_t* pin) {
     gpio_set_pin_mode(pin, GPIO_MODE_INPUT);
     
     gpio_set_pull_configuration(pin, GPIO_PULLDOWN);
-    delay(10);
+    for(int i = 0; i < 0xFFFF; i++) __asm("NOP"); // delay
     if(gpio_read_pin(pin)) return GPIO_CT_TIED_HIGH;
 
     gpio_set_pull_configuration(pin, GPIO_PULLUP);
-    delay(10);
+    for(int i = 0; i < 0xFFFF; i++) __asm("NOP"); // delay
     if(!gpio_read_pin(pin)) return GPIO_CT_TIED_LOW;
 
     return GPIO_CT_FLOATING;

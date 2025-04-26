@@ -1,7 +1,7 @@
-#include <knabberkiste/hal/delay.h>
-#include <knabberkiste/io.h>
-
 #if !__has_include("FreeRTOS.h")
+
+    #include <knabberkiste/hal/delay.h>
+    #include <knabberkiste/io.h>
 
     static volatile uint64_t tick_cnt = 0;
     static TickRate_t tick_rate;

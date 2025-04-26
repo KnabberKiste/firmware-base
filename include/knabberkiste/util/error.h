@@ -12,7 +12,7 @@
  *     // Error-prone code here
  * } error_catch(error_t somevar) {
  *     // Handle your error here
- * } error_end_handling;
+ * }
  * @endcode
  */
 
@@ -47,9 +47,14 @@ typedef struct {
  * any given task.
  */
 typedef struct {
+    /// @brief jmp_buf for ``longjmp`` to jump to in case of an error.
     jmp_buf try_buf;
+    /// @brief Whether the code is currently wrapped in a ``try`` block.
     bool try_active;
+    /// @brief Current error state which was thrown.
     error_t current_error;
+    /// @brief Whether an error has occurred.
+    bool error_occurred;
 } __error_manager_state_t;
 
 /**
@@ -57,6 +62,18 @@ typedef struct {
  * @brief Error manager state of the default task.
  */
 extern volatile __error_manager_state_t __error_manager_state;
+
+/**
+ * @internal
+ * @brief Error manager state of the default task.
+ */
+extern volatile __error_manager_state_t __previous_error_manager_state_global;
+
+/**
+ * @internal
+ * @brief Internal pointer to the current error manager state.
+ */
+extern volatile __error_manager_state_t* volatile __em_ptr_global;
 
 /**
  * @brief Throws an error with the given error information.
@@ -83,6 +100,7 @@ void error_throw(error_code_t error_code, const char* error_message);
                 /* The error manager state struct has to be allocated. */ \
                 __em_ptr = pvPortMalloc(sizeof(__error_manager_state_t)); \
                 vTaskSetThreadLocalStoragePointer(NULL, __THREAD_LOCAL_ERROR_MANAGER_STATE_INDEX, __em_ptr); \
+                __em_ptr->error_occurred = false; \
             } \
         } else { \
             /* FreeRTOS scheduler is not running */ \
@@ -115,7 +133,12 @@ void error_throw(error_code_t error_code, const char* error_message);
         __setjmp_result = setjmp(__em_ptr->try_buf); \
         __enable_irq(); \
         if(__setjmp_result == 0)
-        
+
+#define __close_try \
+        __disable_irq(); \
+        __em_ptr_global = __em_ptr; \
+        memcpy(&__previous_error_manager_state_global, &__previous_error_manager_state, sizeof(__previous_error_manager_state)); \
+    }
 
 /**
  * @brief Catch block of the error library. Allows for an error_variable to be set
@@ -126,9 +149,14 @@ void error_throw(error_code_t error_code, const char* error_message);
  * limited to the ``error_catch`` block.
  */
 #define error_catch(error_variable) \
-        error_variable = __em_ptr->current_error; \
-        memcpy(__em_ptr, &__previous_error_manager_state, sizeof(__previous_error_manager_state)); \
-        if(__setjmp_result != 0)
+    __close_try \
+    error_variable = __em_ptr_global->current_error; \
+    for( \
+        error_variable = __em_ptr_global->current_error; \
+        __em_ptr_global->error_occurred; \
+        __em_ptr_global->error_occurred, \
+        memcpy(__em_ptr_global, &__previous_error_manager_state_global, sizeof(__previous_error_manager_state_global)), __enable_irq() \
+    )
 
 /**
  * @brief Catch block of the error library. Same as @ref error_catch, but this does not
@@ -138,9 +166,3 @@ void error_throw(error_code_t error_code, const char* error_message);
 #define error_catch_any \
         memcpy(__em_ptr, &__previous_error_manager_state, sizeof(__previous_error_manager_state)); \
         if(__setjmp_result != 0)
-
-/**
- * @brief Ends the error handling block.
- */
-#define error_end_handling \
-    }
