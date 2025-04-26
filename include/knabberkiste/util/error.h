@@ -28,7 +28,36 @@
 /**
  * @brief Error code type used in @ref util/error.h
  */
-typedef uint8_t error_code_t;
+typedef enum {
+    /// @brief No error has occurred. Do not throw this.
+    ERR_NONE = 0,
+    /**
+     * @brief Generic runtime error. May be used for cases
+     * not covered by the pre-defined error codes.
+     */
+    ERR_RUNTIME_GENERIC,
+    /**
+     * @brief Error you can throw if you have not (yet) implemented
+     * something.
+     */
+    ERR_NOT_IMPLEMENTED,
+    /**
+     * @brief Error you can throw when an overflow occurred.
+     */
+    ERR_OVERFLOW,
+    /**
+     * @brief Error you can throw when an underflow occurred.
+     */
+    ERR_UNDERFLOW,
+    /**
+     * @brief Error you can throw when a overrun has occurred.
+     */
+    ERR_OVERRUN,
+    /**
+     * @brief Error you can throw when a buffer is already full.
+     */
+    ERR_BUFFER_FULL
+} error_code_t;
 
 /**
  * @brief Struct representing an error which may occur, or may
