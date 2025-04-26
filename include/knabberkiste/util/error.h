@@ -145,8 +145,6 @@ void uncaught_error_handler(error_t* error);
  * 
  * @param error_code Error code to throw.
  * @param error_message Error message to pass along with the error code.
- * 
- * @noreturn
  */
 #define error_throw(error_code, error_message) _error_throw(error_code, #error_code, error_message, __FILE__, __FUNCTION__)
 
