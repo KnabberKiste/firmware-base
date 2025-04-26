@@ -83,6 +83,8 @@ volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
 /**
  * @brief Puts the given @p element to the end of the @p fifo.
  * 
+ * If the FIFO is already full, this blocks until space is available.
+ * 
  * @param fifo FIFO to which the element should be appended.
  * @param element Element which will be appended to the FIFO.
  */
@@ -90,6 +92,8 @@ volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
 
 /**
  * @brief Puts the given @p element, which may be a lliteral, to the end of the @p fifo.
+ * 
+ * If the FIFO is already full, this blocks until space is available.
  * 
  * @param fifo FIFO to which the element should be appended.
  * @param element Element which will be appended to the FIFO.
@@ -101,6 +105,8 @@ volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
 
 /**
  * @brief Gets an element from the @p fifo and writes it ot the variable @p element.
+ * 
+ * If the FIFO is already empty, this blocks until an element becomes available.
  * 
  * @param fifo FIFO from which to get the element.
  * @param element Variable to which the element will be written to.
@@ -122,28 +128,28 @@ volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
  * 
  * @param fifo The FIFO queue you want to access.
  */
-#define fifo_get_size(fifo) (fifo._fifo_size)
+#define fifo_get_size(fifo) ((fifo)._fifo_size)
 /**
  * @brief Gets the element size of the queue, i.e. the size of one element in bytes.
  * 
  * @param fifo The FIFO queue you want to access.
  */
-#define fifo_get_element_size(fifo) (fifo._element_size)
+#define fifo_get_element_size(fifo) ((fifo)._element_size)
 /**
  * @brief Gets the number of elements currently in the queue.
  * 
  * @param fifo The FIFO queue you want to access.
  */
-#define fifo_get_element_count(fifo) (fifo._count)
+#define fifo_get_element_count(fifo) ((fifo)._count)
 /**
  * @brief Checks if the given FIFO queue is empty, i.e. none of the slots in the queue are occupied.
  * 
  * @param fifo The FIFO queue you want to access.
  */
-#define fifo_empty(fifo) (fifo._count == 0)
+#define fifo_empty(fifo) ((fifo)._count == 0)
 /**
  * @brief Checks if the given FIFO queue is full, i.e. all the slots in the queue are occupied.
  * 
  * @param fifo The FIFO queue you want to access.
  */
-#define fifo_full(fifo) (fifo._count == fifo._fifo_size)
+#define fifo_full(fifo) ((fifo)._count == (fifo)._fifo_size)
