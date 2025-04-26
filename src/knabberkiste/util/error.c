@@ -10,7 +10,7 @@ void error_handler(error_t* error) {
 
 #if __has_include("FreeRTOS.h")
 
-    void error_throw(error_code_t error_code, const char* error_message) {
+    void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, unsigned int origin_line) {
         __error_manager_state_t* __em_ptr;
 
         if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
@@ -25,6 +25,9 @@ void error_handler(error_t* error) {
 
         __em_ptr->current_error.error_code = error_code;
         __em_ptr->current_error.error_message = error_message;
+        __em_ptr->current_error.error_name = error_name;
+        __em_ptr->current_error.origin_file = origin_file;
+        __em_ptr->current_error.origin_line = origin_line;
         
         if(__em_ptr != 0 && __em_ptr->try_active) {
             /* Current code is wrapped in a try/catch block. */
@@ -40,21 +43,24 @@ void error_handler(error_t* error) {
 
 #else
 
-void error_throw(error_code_t error_code, const char* error_message) {    
-    __error_manager_state.error_occurred = true;
-    __error_manager_state.current_error.error_code = error_code;
-    __error_manager_state.current_error.error_message = error_message;
-    
-    if(__error_manager_state.try_active) {
-        /* Current code is wrapped in a try/catch block. */
-        // Jump to the catch block
-        longjmp(&(__error_manager_state.try_buf), 1);
-    }
-
-    /* Current code is not wrapped in a try/catch block. */
-    error_handler(&(__error_manager_state.current_error));
+    void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, unsigned int origin_line) {    
+        __error_manager_state.error_occurred = true;
+        __error_manager_state.current_error.error_code = error_code;
+        __error_manager_state.current_error.error_name = error_name;
+        __error_manager_state.current_error.error_message = error_message;
+        __error_manager_state.current_error.origin_file = origin_file;
+        __error_manager_state.current_error.origin_line = origin_line;
         
-    while(1); // Stall if error handler returns (it shouldn't)
-}
+        if(__error_manager_state.try_active) {
+            /* Current code is wrapped in a try/catch block. */
+            // Jump to the catch block
+            longjmp(&(__error_manager_state.try_buf), 1);
+        }
+
+        /* Current code is not wrapped in a try/catch block. */
+        error_handler(&(__error_manager_state.current_error));
+            
+        while(1); // Stall if error handler returns (it shouldn't)
+    }
 
 #endif

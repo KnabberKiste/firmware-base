@@ -37,8 +37,14 @@ typedef uint8_t error_code_t;
 typedef struct {
     /// @brief Error code.
     error_code_t error_code;
+    /// @brief Name of the error code in the code.
+    const char* error_name;
     /// @brief String-type error message passed with the error code.
     const char* error_message;
+    /// @brief String-type name of the file from which the error originates.
+    const char* origin_file;
+    /// @brief Line from which the error originates.
+    unsigned int origin_line;
 } error_t;
 
 /**
@@ -76,12 +82,24 @@ extern volatile __error_manager_state_t __previous_error_manager_state_global;
 extern volatile __error_manager_state_t* volatile __em_ptr_global;
 
 /**
+ * @internal
+ * @brief Internal error throw function.
+ * 
+ * @param error_code Error code identifying the error.
+ * @param error_name Name of the error code.
+ * @param error_message Error message passed along with the error.
+ * @param origin_file File from which the error originates.
+ * @param origin_line Line from which the error originates.
+ */
+void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, unsigned int origin_line);
+
+/**
  * @brief Throws an error with the given error information.
  * 
  * @param error_code Error code to throw.
  * @param error_message Error message to pass along with the error code.
  */
-void error_throw(error_code_t error_code, const char* error_message);
+#define error_throw(error_code, error_message) _error_throw(error_code, #error_code, error_message, __FILE__, __LINE__)
 
 #if __has_include("FreeRTOS.h")
     /* FreeRTOS implementation*/
