@@ -43,8 +43,8 @@ typedef struct {
     const char* error_message;
     /// @brief String-type name of the file from which the error originates.
     const char* origin_file;
-    /// @brief Line from which the error originates.
-    unsigned int origin_line;
+    /// @brief String-type name of the function from which the error originates.
+    const char* origin_function;
 } error_t;
 
 /**
@@ -89,9 +89,9 @@ extern volatile __error_manager_state_t* volatile __em_ptr_global;
  * @param error_name Name of the error code.
  * @param error_message Error message passed along with the error.
  * @param origin_file File from which the error originates.
- * @param origin_line Line from which the error originates.
+ * @param origin_function Function from which the error originates.
  */
-void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, unsigned int origin_line);
+void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, const char* origin_function);
 
 /**
  * @brief Throws an error with the given error information.
@@ -99,7 +99,7 @@ void _error_throw(error_code_t error_code, const char* error_name, const char* e
  * @param error_code Error code to throw.
  * @param error_message Error message to pass along with the error code.
  */
-#define error_throw(error_code, error_message) _error_throw(error_code, #error_code, error_message, __FILE__, __LINE__)
+#define error_throw(error_code, error_message) _error_throw(error_code, #error_code, error_message, __FILE__, __FUNCTION__)
 
 #if __has_include("FreeRTOS.h")
     /* FreeRTOS implementation*/

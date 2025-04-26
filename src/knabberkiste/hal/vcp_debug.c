@@ -55,9 +55,10 @@ void vcp_putchar(char c) {
 }
 
 void vcp_print(const char* str) {
-    do {
+    str--;
+    while(*(++str) != 0) {
         vcp_putchar(*str);
-    } while(*(++str) != 0);
+    }
 }
 
 void vcp_println(const char* str) {
