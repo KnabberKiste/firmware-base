@@ -66,7 +66,7 @@ volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
  * 
  * @param type Element type which the FIFO will contain.
  * @param name Name under which the FIFO can be accessed.
- * @param size Size of the FIFO.
+ * @param fifo_size Size of the FIFO.
  */
 #define fifo_declare(type, name, fifo_size) \
     volatile type TOKEN_CONCAT(__INTERNAL_FIFOBUF_, __LINE__)[fifo_size]; \
