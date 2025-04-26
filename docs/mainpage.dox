@@ -1,0 +1,27 @@
+/**
+@mainpage KnabberKiste base firmware docs
+
+@section Installation
+You can install the includes for this library in your ``platformio.ini`` configuration file by adding
+the link to the repository to it's ``lib_deps``.
+
+@code{.ini}
+lib_deps = |
+    https://github.com/KnabberKiste/firmware-base
+@endcode
+
+This automatically installs and builds the firmware files.
+
+@subsection FreeRTOS
+[FreeRTOS](https://www.freertos.org/) is a real-time operating system, which can be used in combindation
+with this library. Functions marked as _thread-safe_ or similar are safe to be used between threads.
+
+You can install a fully pre-configured version of FreeRTOS for the STM32F303xC from this [repository](https://github.com/KnabberKiste/freertos-stm32f303xc)
+by adding it to your ``lib_deps``, similarly to how you install this library.
+
+@code{.ini}
+lib_deps = |
+    https://github.com/KnabberKiste/firmware-base
+    https://github.com/KnabberKiste/freertos-stm32f303xc
+@endcode
+*/
