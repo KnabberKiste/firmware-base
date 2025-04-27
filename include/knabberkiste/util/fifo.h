@@ -55,6 +55,35 @@ void _fifo_get(volatile _FIFO_t* fifo, void* element);
 volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
 
 /**
+ * @brief Declares a new FIFO with the given @p type, @p name and @p size. You can
+ * specify additional qualifiers for the FIFO variable, e.g. static.
+ * 
+ * @code{.c}
+ * // At the desired scope of your FIFO, do:
+ * fifo_declare(type, name, fifo_size);
+ * @endcode
+ * 
+ * This can also be used in local scope, i.e. allocated on stack.
+ * 
+ * @param type Element type which the FIFO will contain.
+ * @param name Name under which the FIFO can be accessed.
+ * @param fifo_size Size of the FIFO.
+ * @param qualifiers Additional qualifiers which will be placed before the
+ * type of the FIFO.
+ */
+#define fifo_declare_qualifier(type, name, fifo_size, qualifiers) \
+    qualifiers volatile type TOKEN_CONCAT(__INTERNAL_FIFOBUF_, __LINE__)[fifo_size]; \
+    typedef type TOKEN_CONCAT(__INTERNAL_FIFO_CLIENT_TYPE_, name); \
+    qualifiers volatile _FIFO_t name = { \
+        ._start = 0, \
+        ._end = 0, \
+        ._count = 0, \
+        ._element_size = sizeof(type), \
+        ._fifo_size = fifo_size, \
+        ._buf = TOKEN_CONCAT(__INTERNAL_FIFOBUF_, __LINE__) \
+    }
+
+/**
  * @brief Declares a new FIFO with the given @p type, @p name and @p size.
  * 
  * @code{.c}
@@ -68,17 +97,7 @@ volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
  * @param name Name under which the FIFO can be accessed.
  * @param fifo_size Size of the FIFO.
  */
-#define fifo_declare(type, name, fifo_size) \
-    volatile type TOKEN_CONCAT(__INTERNAL_FIFOBUF_, __LINE__)[fifo_size]; \
-    typedef type TOKEN_CONCAT(__INTERNAL_FIFO_CLIENT_TYPE_, name); \
-    volatile _FIFO_t name = { \
-        ._start = 0, \
-        ._end = 0, \
-        ._count = 0, \
-        ._element_size = sizeof(type), \
-        ._fifo_size = fifo_size, \
-        ._buf = TOKEN_CONCAT(__INTERNAL_FIFOBUF_, __LINE__) \
-    }
+#define fifo_declare(type, name, fifo_size) fifo_declare_qualifier(type, name, fifo_size,)
 
 /**
  * @brief Puts the given @p element to the end of the @p fifo.
