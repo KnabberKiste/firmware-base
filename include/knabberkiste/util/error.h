@@ -156,7 +156,7 @@ void uncaught_error_handler(error_t* error);
     #define __THREAD_LOCAL_ERROR_MANAGER_STATE_INDEX 0
 
     #define __get_em_ptr \
-        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) { \
+        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED && !CORTEX_ACTIVE_INTERRUPT_VECTOR) { \
             /* FreeRTOS scheduler is running */ \
             __em_ptr = pvTaskGetThreadLocalStoragePointer(NULL, __THREAD_LOCAL_ERROR_MANAGER_STATE_INDEX); \
             \
@@ -215,7 +215,6 @@ void uncaught_error_handler(error_t* error);
  */
 #define error_catch(error_variable) \
     __close_try \
-    error_variable = __em_ptr_global->current_error; \
     for( \
         error_variable = __em_ptr_global->current_error; \
         __em_ptr_global->error_occurred; \
@@ -230,10 +229,10 @@ void uncaught_error_handler(error_t* error);
  */
 #define error_catch_any \
     __close_try \
-    error_variable = __em_ptr_global->current_error; \
     for( \
         ; \
         __em_ptr_global->error_occurred; \
         __em_ptr_global->error_occurred = false, \
         memcpy(__em_ptr_global, &__previous_error_manager_state_global, sizeof(__previous_error_manager_state_global)), __enable_irq() \
     )
+

@@ -6,6 +6,7 @@
 volatile __error_manager_state_t __error_manager_state;
 volatile __error_manager_state_t __previous_error_manager_state_global;
 volatile __error_manager_state_t* volatile __em_ptr_global;
+volatile jmp_buf __yield_buf;
 
 #if __has_include("FreeRTOS.h")
     #include <FreeRTOS.h>
@@ -22,29 +23,31 @@ void __attribute__((weak)) uncaught_error_handler(error_t* error) {
     vcp_println(error->origin_file);
     vcp_print("\tFunction: ");
     vcp_println(error->origin_function);
-    vcp_print("\tTask: ");
+    vcp_print("\tContext: ");
 
     if(CORTEX_ACTIVE_INTERRUPT_VECTOR) {
         /* Error was thrown in ISR */
-        vcp_println("<ISR>");
+        vcp_println("<ISR> [MCU will be blocked]");
     }
     #if __has_include("FreeRTOS.h")
         else if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
             /* FreeRTOS scheduler is running */
-            vcp_println(pcTaskGetName(0));
+            vcp_print("FreeRTOS task '");
+            vcp_print(pcTaskGetName(0));
+            vcp_println("' [will be deleted]");
         }
     #endif
     else { \
         /* FreeRTOS scheduler is not running */
-        vcp_println("<no task>");
+        vcp_println("<no task> [MCU will be blocked]");
     }
 }
 
 #if __has_include("FreeRTOS.h")
     void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, const char* origin_function) {
-        __error_manager_state_t* __em_ptr;
+        volatile __error_manager_state_t* __em_ptr;
 
-        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED && !CORTEX_ACTIVE_INTERRUPT_VECTOR) {
             /* FreeRTOS scheduler is running */
             __em_ptr = pvTaskGetThreadLocalStoragePointer(NULL, __THREAD_LOCAL_ERROR_MANAGER_STATE_INDEX);
         } else { \
@@ -63,7 +66,7 @@ void __attribute__((weak)) uncaught_error_handler(error_t* error) {
             __em_ptr->current_error.origin_function = origin_function;
 
             // Jump to the catch block
-            longjmp(&(__em_ptr->try_buf), 1);
+            longjmp((int*)&(__em_ptr->try_buf), 1);
         }
 
         error_t current_error;
@@ -77,17 +80,14 @@ void __attribute__((weak)) uncaught_error_handler(error_t* error) {
         /* Current code is not wrapped in a try/catch block. */
         uncaught_error_handler(&current_error);
             
-        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
-            if(CORTEX_ACTIVE_INTERRUPT_VECTOR) {
-                vcp_println("INFO: Control is being passed back to FreeRTOS");
-                portYIELD_FROM_ISR(pdTRUE);
-                return;
-            } else {
-                vcp_println("INFO: Current task is being deleted.");
-                __enable_irq();
-                vTaskDelete(NULL);
-                while(1);
-            }
+        if(CORTEX_ACTIVE_INTERRUPT_VECTOR) {
+            while(1);
+        } else if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+            __enable_irq();
+            vTaskDelete(NULL);
+            while(1);
+        } else {
+            while(1);
         }
     }
 
