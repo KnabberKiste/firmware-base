@@ -1,36 +1,46 @@
 #include <knabberkiste/util/error.h>
 #include <knabberkiste/hal/vcp_debug.h>
+#include <knabberkiste/io.h>
 #include <stdio.h>
 
 volatile __error_manager_state_t __error_manager_state;
 volatile __error_manager_state_t __previous_error_manager_state_global;
 volatile __error_manager_state_t* volatile __em_ptr_global;
 
-#define ERROR_INFO_SIZE 128
-
 #if __has_include("FreeRTOS.h")
-    void __attribute__((weak)) uncaught_error_handler(error_t* error) {
-        static char error_info[ERROR_INFO_SIZE];
-        snprintf(error_info, ERROR_INFO_SIZE, "%s [file '%s', function '%s']", error->error_name, error->origin_file, error->origin_function);
-        vcp_print("Uncaught error ");
-        vcp_print(error_info);
-        vcp_print(" in task ");
+    #include <FreeRTOS.h>
+    #include <task.h>
+    #include <portable.h>
+#endif
 
-        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+void __attribute__((weak)) uncaught_error_handler(error_t* error) {
+    vcp_print("\r\n\r\nUncaught error ");
+    vcp_print(error->error_name);
+    vcp_print(": ");
+    vcp_println(error->error_message);
+    vcp_print("\tFile: ");
+    vcp_println(error->origin_file);
+    vcp_print("\tFunction: ");
+    vcp_println(error->origin_function);
+    vcp_print("\tTask: ");
+
+    if(CORTEX_ACTIVE_INTERRUPT_VECTOR) {
+        /* Error was thrown in ISR */
+        vcp_println("<ISR>");
+    }
+    #if __has_include("FreeRTOS.h")
+        else if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
             /* FreeRTOS scheduler is running */
             vcp_println(pcTaskGetName(0));
-        } else { \
-            /* FreeRTOS scheduler is not running */
-            vcp_println("<no task>");
         }
-
-        vcp_print("\t");
-        vcp_println(error->error_message);
-        vcp_println("");
-
-        while(1);
+    #endif
+    else { \
+        /* FreeRTOS scheduler is not running */
+        vcp_println("<no task>");
     }
+}
 
+#if __has_include("FreeRTOS.h")
     void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, const char* origin_function) {
         __error_manager_state_t* __em_ptr;
 
@@ -67,21 +77,21 @@ volatile __error_manager_state_t* volatile __em_ptr_global;
         /* Current code is not wrapped in a try/catch block. */
         uncaught_error_handler(&current_error);
             
-        while(1); // Stall if error handler returns (it shouldn't)
+        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+            if(CORTEX_ACTIVE_INTERRUPT_VECTOR) {
+                vcp_println("INFO: Control is being passed back to FreeRTOS");
+                portYIELD_FROM_ISR(pdTRUE);
+                return;
+            } else {
+                vcp_println("INFO: Current task is being deleted.");
+                __enable_irq();
+                vTaskDelete(NULL);
+                while(1);
+            }
+        }
     }
 
 #else
-
-    void __attribute__((weak)) uncaught_error_handler(error_t* error) {
-        static char error_info[ERROR_INFO_SIZE];
-        snprintf(error_info, ERROR_INFO_SIZE, "%s [file '%s', function '%s']", error->error_name, error->origin_file, error->origin_function);
-        vcp_print("Uncaught error");
-        vcp_println(error_info);
-        vcp_print("\t");
-        vcp_println(error->error_message);
-
-        while(1);
-    }
 
     void _error_throw(error_code_t error_code, const char* error_name, const char* error_message, const char* origin_file, const char* origin_function) {    
         __error_manager_state.error_occurred = true;

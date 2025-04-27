@@ -1,6 +1,11 @@
 {
     "files.associations": {
         "freertosconfig.h": "c",
-        "vcp_debug.h": "c"
+        "vcp_debug.h": "c",
+        "delay.h": "c",
+        "bxcan.h": "c",
+        "bit_manipulation.h": "c",
+        "io.h": "c",
+        "portable.h": "c"
     }
 }
