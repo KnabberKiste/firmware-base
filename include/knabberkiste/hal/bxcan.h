@@ -33,6 +33,9 @@
  * When an error occurs during transmission, @ref can_error_callback() is called. Note that this
  * may not be called for every frame which fails to get transmitted, but only once if an error
  * condition stays active.
+ * 
+ * The bxCAN HAL recovers automatically from errors, i.e. CAN frames will be transmitted once
+ * the error condition is gone.
  */
 
 #pragma once

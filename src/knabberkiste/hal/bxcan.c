@@ -89,6 +89,9 @@ void CAN_SCE_IRQHandler() {
     if(error_code) {
         can_error_callback(error_code);
     }
+
+    // Clear the interrupt flag
+    SET_MASK(CAN->MSR, CAN_MSR_ERRI);
 }
 
 void can_init(uint32_t bitrate, CAN_TestMode_t testMode) {
@@ -121,9 +124,9 @@ void can_init(uint32_t bitrate, CAN_TestMode_t testMode) {
     // Enable interrutps
     SET_MASK(CAN->IER, CAN_IER_ERRIE); // Error interrupt enable
     SET_MASK(CAN->IER, CAN_IER_LECIE); // Last error code interrupt enable
-    SET_MASK(CAN->IER, CAN_IER_BOFIE); // Bus-off interrupt enable
-    SET_MASK(CAN->IER, CAN_IER_EPVIE); // Error passive interrupt enable
-    SET_MASK(CAN->IER, CAN_IER_EWGIE); // Error warning interrupt enable
+    CLEAR_MASK(CAN->IER, CAN_IER_BOFIE); // Bus-off interrupt enable
+    CLEAR_MASK(CAN->IER, CAN_IER_EPVIE); // Error passive interrupt enable
+    CLEAR_MASK(CAN->IER, CAN_IER_EWGIE); // Error warning interrupt enable
     SET_MASK(CAN->IER, CAN_IER_FOVIE1); // FIFO 1 overrun interrupt enable
     SET_MASK(CAN->IER, CAN_IER_FMPIE1); // FIFO 1 message pending interrupt enable
     CLEAR_MASK(CAN->IER, CAN_IER_FFIE1); // FIFO 1 full interrupt enable
