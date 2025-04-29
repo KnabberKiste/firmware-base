@@ -6,6 +6,7 @@
         "bxcan.h": "c",
         "bit_manipulation.h": "c",
         "io.h": "c",
-        "portable.h": "c"
+        "portable.h": "c",
+        "fifo.h": "c"
     }
 }

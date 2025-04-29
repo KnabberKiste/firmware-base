@@ -6,6 +6,7 @@
 #include <knabberkiste/util/error.h>
 #include <knabberkiste/io.h>
 #include <string.h>
+#include <math.h>
 
 #define BXCAN_TX_QUEUE_SIZE 4
 
@@ -144,11 +145,21 @@ void can_init(uint32_t bitrate, CAN_TestMode_t testMode) {
     // Configure test mode
     SET_MASK(CAN->BTR, testMode);
 
+    // Set a sample point of 87.5%
+    WRITE_MASK_OFFSET(CAN->BTR, 0b1111, 5, CAN_BTR_TS1_Pos);
+    WRITE_MASK_OFFSET(CAN->BTR, 0b111, 0, CAN_BTR_TS2_Pos);
+
+    // Set synchronization jump
+    WRITE_MASK_OFFSET(CAN->BTR, 0b11, 0, CAN_BTR_SJW_Pos);
+    
     // Configure bitrate
     uint8_t ts1_val = READ_MASK_OFFSET(CAN->BTR, 0b1111, CAN_BTR_TS1_Pos);
     uint8_t ts2_val = READ_MASK_OFFSET(CAN->BTR, 0b111, CAN_BTR_TS2_Pos);
-    uint32_t time_quantum_frequency = bitrate * (3 + ts1_val + ts2_val);
-    uint32_t brp_val = (SystemCoreClock / time_quantum_frequency) - 1;
+    float time_quantum_frequency = bitrate * (3 + ts1_val + ts2_val);
+
+    // TODO: QUERY APB1 FREQUENCY
+    float brp_val_float = ((SystemCoreClock / 2) / time_quantum_frequency) - 1;
+    uint32_t brp_val = round(brp_val_float);
     WRITE_MASK_OFFSET(CAN->BTR, 0b111111111, brp_val, CAN_BTR_BRP_Pos);
 
     // Enable bxCAN
