@@ -1,6 +1,7 @@
 #include <knabberkiste/hal/bxcan.h>
 #include <knabberkiste/hal/vcp_debug.h>
 #include <knabberkiste/hal/gpio.h>
+#include <knabberkiste/hal/clock.h>
 #include <knabberkiste/util/bit_manipulation.h>
 #include <knabberkiste/util/fifo.h>
 #include <knabberkiste/util/error.h>
@@ -157,8 +158,7 @@ void can_init(uint32_t bitrate, CAN_TestMode_t testMode) {
     uint8_t ts2_val = READ_MASK_OFFSET(CAN->BTR, 0b111, CAN_BTR_TS2_Pos);
     float time_quantum_frequency = bitrate * (3 + ts1_val + ts2_val);
 
-    // TODO: QUERY APB1 FREQUENCY
-    float brp_val_float = ((SystemCoreClock / 2) / time_quantum_frequency) - 1;
+    float brp_val_float = (clock_getAPB1Frequency() / time_quantum_frequency) - 1;
     uint32_t brp_val = round(brp_val_float);
     WRITE_MASK_OFFSET(CAN->BTR, 0b111111111, brp_val, CAN_BTR_BRP_Pos);
 

@@ -13,13 +13,11 @@
 
 void vcp_init(long long baudrate) {
     // Configure the GPIO pins
-    gpio_enable_port_clock(VCP_USART_RX_PIN);
-    gpio_set_pin_mode(VCP_USART_RX_PIN, GPIO_MODE_ALTERNATE);
-    gpio_set_alternate(VCP_USART_RX_PIN, VCP_USART_RX_PIN_AF);
+    VCP_USART_RX_PIN->mode = GPIO_MODE_ALTERNATE;
+    VCP_USART_RX_PIN->alternate = VCP_USART_RX_PIN_AF;
 
-    gpio_enable_port_clock(VCP_USART_TX_PIN);
-    gpio_set_pin_mode(VCP_USART_TX_PIN, GPIO_MODE_ALTERNATE);
-    gpio_set_alternate(VCP_USART_TX_PIN, VCP_USART_TX_PIN_AF);
+    VCP_USART_TX_PIN->mode = GPIO_MODE_ALTERNATE;
+    VCP_USART_TX_PIN->alternate = VCP_USART_TX_PIN_AF;
 
     // Enable the USART clock
     SET_MASK(RCC->APB2ENR, RCC_APB2ENR_USART1EN);

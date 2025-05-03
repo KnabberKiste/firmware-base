@@ -1,6 +1,37 @@
 #include <knabberkiste/hal/clock.h>
 #include <knabberkiste/io.h>
 
+// Prescaler mapping table
+static const uint16_t ahb_prescaler_mapping[] = {
+    1, // 0000
+    1, // 0001
+    1, // 0010
+    1, // 0011
+    1, // 0100
+    1, // 0101
+    1, // 0110
+    1, // 0111
+    2, // 1000
+    4, // 1001
+    8, // 1010
+    16, // 1011
+    64, // 1100
+    128, // 1101
+    256, // 1110
+    512// 1111
+};
+static const uint8_t apb_prescaler_mapping[] = {
+    1, // 000
+    1, // 001
+    1, // 010
+    1, // 011
+    2, // 100
+    4, // 101
+    8, // 110
+    16, // 111
+};
+
+
 void clock_configure64MHz() {
     // Disable the PLL
     CLEAR_MASK(RCC->CR, RCC_CR_PLLON);
@@ -34,4 +65,28 @@ void clock_configure64MHz() {
 
     // Update the system core clock
     SystemCoreClockUpdate();
+}
+
+uint16_t clock_getAHBPrescaler() {
+    return ahb_prescaler_mapping[READ_MASK_OFFSET(RCC->CFGR, 0b1111, RCC_CFGR_HPRE_Pos)];
+}
+
+uint8_t clock_getAPB1Prescaler() {
+    return apb_prescaler_mapping[READ_MASK_OFFSET(RCC->CFGR, 0b111, RCC_CFGR_PPRE1_Pos)];
+}
+
+uint8_t clock_getAPB2Prescaler() {
+    return apb_prescaler_mapping[READ_MASK_OFFSET(RCC->CFGR, 0b111, RCC_CFGR_PPRE2_Pos)];
+}
+
+uint32_t clock_getAHBFrequency() {
+    return SystemCoreClock / clock_getAHBPrescaler();
+}
+
+uint32_t clock_getAPB1Frequency() {
+    return clock_getAHBFrequency() / clock_getAPB1Prescaler();
+}
+
+uint32_t clock_getAPB2Frequency() {
+    return clock_getAHBFrequency() / clock_getAPB2Prescaler();
 }
