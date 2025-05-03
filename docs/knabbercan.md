@@ -156,6 +156,9 @@ Command frames trigger an action on a node and must be answered by a `REPORT` or
 | :---------------- | :------------------------ | :---------------- | :------------------------ |
 | **Power control** ||||
 | `0x00`            | `void`                    | No response.      | `RESET`                   |
+| **General device control** ||||
+| `0x10`            | `bool`                    | No response.      | `SET_INDICATORS_ACTIVE`   |
+| `0x11`            | `void`                    | `char[]`          | `READ_FWR_NAME`           |
 | **Application-defined commands** ||||
 | `0x40` .. `0xFF`  | Application-defined commands. |||
 
@@ -165,6 +168,12 @@ The `RESET` commands restarts the whole application running on a node, repeating
 The `RESET` command is not confirmed by a response, but will trigger a `POWERUP` event due to the node being reinitialized.
 
 **This command may only be broadcasted to the whole network, making every node repeat it's initialization routine.**
+
+##### 0x10 - SET INDICATORS ACTIVE
+Enables or disables the LED indicators of the node.
+
+##### 0x11 - READ FIRMWARE NAME
+Reads the name of the firmware running on a node. The payload consists of a single string containing the name of the firmware.
 
 ### Error frames
 
@@ -215,3 +224,17 @@ When a node is powered up, it must follow this procedure:
     5. If `CONN_OUT` is LOW, the node emits an `ADDRESSING_FINISHED` event and returns to the application.
 
 This results in every node being assigned a node ID incrementally from the first OUT port to the last IN port, accounting for varying boot times.
+
+## Indicator LEDs
+
+If the connectors on a node feature indicator LEDs, they must be used as follows:
+
+| State                                         | Green LED usage           | Yellow LED usage              |
+| :-------------------------------------------- | :------------------------ | :---------------------------- |
+| **During addressing** |||
+| Address assignment pending                    | Off                       | Off                           |
+| Address assignment succeeded                  | On                        | Off                           |
+| **After addressing** |||
+| Frame received                                | Toggled                   | Unchanged                     |
+| Frame transmitted                             | Unchanged                 | Toggled                       |
+| Application crashed due to uncaught error     | Off                       | Blinking with 10 Hz           |
