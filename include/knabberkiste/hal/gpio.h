@@ -10,12 +10,6 @@
 #include <stdbool.h>
 
 /**
- * @brief Non-transparent data type defining a GPIO pin. All the pins are pre-defined in the
- * @ref gpio.h file, you shouldn't need to define any.
- */
-typedef struct GPIO_Pin GPIO_Pin_t;
-
-/**
  * @brief Enumeration of GPIO connectivity test results.
  */
 typedef enum {
@@ -67,6 +61,18 @@ typedef enum {
 } GPIO_OutputType_t;
 
 /**
+ * @brief Enumeration of GPIO output speeds.
+ */
+typedef enum {
+    /// @brief Low speed output.
+    GPIO_OUTPUT_SPEED_LOW = 0,
+    /// @brief Medium speed output.
+    GPIO_OUTPUT_SPEED_MEDIUM = 0b01,
+    /// @brief High speed output.
+    GPIO_OUTPUT_SPEED_HIGH = 0b11,
+} GPIO_OutputSpeed_t;
+
+/**
  * @brief Enumeration of GPIO input pull configurations.
  */
 typedef enum {
@@ -101,109 +107,27 @@ typedef enum {
 } GPIO_AlternateFunction_t;
 
 /**
- * @brief Enables the port clock of a GPIO pin. This must be done before
- * accessing any functionality on the given pin, as that may fail otherwise.
- * 
- * @param pin Pin to activate the port clock on.
+ * @brief Enables the port clocks for all GPIO ports.
  */
-void gpio_enable_port_clock(GPIO_Pin_t* pin);
-
-/**
- * @brief Set the mode of the specified GPIO pin.
- * 
- * @param pin The pin you want to change the mode for.
- * @param mode The mode you want to assign to the pin.
- */
-void gpio_set_pin_mode(GPIO_Pin_t* pin, GPIO_Mode_t mode);
-/**
- * @brief Sets the output type of the specified GPIO pin. Only
- * applicable to pins configured as @ref GPIO_MODE_OUTPUT.
- * 
- * @see @ref gpio_set_pin_mode()
- * 
- * @param pin Pin to configure the output type for.
- * @param type Output type to set the GPIO pin to.
- */
-void gpio_set_output_type(GPIO_Pin_t* pin, GPIO_OutputType_t type);
-/**
- * @brief Sets the pull configuration of the specified GPIO pin. Only
- * applicable to pins configured as @ref GPIO_MODE_INPUT.
- * 
- * @see @ref gpio_set_pin_mode()
- * 
- * @param pin Pin to set the pull configuration for.
- * @param type Pull configuartino you want to configure for the pin.
- */
-void gpio_set_pull_configuration(GPIO_Pin_t* pin, GPIO_PullConfiguration_t type);
-/**
- * @brief Assigns an alternate function to the specified GPIO pin. Only
- * applicable to pins configured as @ref GPIO_MODE_ALTERNATE.
- * 
- * @see @ref gpio_set_pin_mode()
- * 
- * @param pin The pin you want to configure the alternate function for.
- * @param alternate The alternate funtion you want to assign to the pin.
- */
-void gpio_set_alternate(GPIO_Pin_t* pin, GPIO_AlternateFunction_t alternate);
-
-/**
- * @brief Reads the value from the given GPIO pin.
- * 
- * @param pin The pin you want to read the value from.
- * @retval true The voltage on the input pin exceeds the input high voltage VIH.
- * @retval false The voltaeg on the input pin is lower than the input low voltage VIL.
- */
-bool gpio_read_pin(GPIO_Pin_t* pin);
-/**
- * @brief Writes the given boolean value to the specified GPIO pin.
- * 
- * This is only applicable to pins set to @ref GPIO_MODE_OUTPUT.
- * 
- * @param pin The pin you want to assign the boolean value to.
- * @param value The boolean value you want to write to the pin.
- */
-void gpio_write_pin(GPIO_Pin_t* pin, bool value);
-/**
- * @brief Sets the given output pin to HIGH.
- * 
- * This is only applicable to pins set to @ref GPIO_MODE_OUTPUT.
- * 
- * @param pin The pin you want to set to HIGH.
- */
-void gpio_set_pin(GPIO_Pin_t* pin);
-/**
- * @brief Clears the given output pin, setting it to LOW.
- * 
- * This is only applicable to pins set to @ref GPIO_MODE_OUTPUT.
- * 
- * @param pin The pin you want to clear.
- */
-void gpio_clear_pin(GPIO_Pin_t* pin);
-/**
- * @brief Toggles the given output pin, setting it to the inverse
- * of it's previous state.
- * 
- * This is only applicable to pins set to @ref GPIO_MODE_OUTPUT.
- * 
- * @param pin The pin you want to toggle.
- */
-void gpio_toggle_pin(GPIO_Pin_t* pin);
-
-/**
- * @brief Attempts to check what is connected to the given GPIO pin by
- * checking what input values it reads as when enabling and disabling
- * the pull-up or pull-down resistors.
- * 
- * @warning This method might be flawed, but you can use this as a sanity
- * check on your board to check for solder bridges and such.
- * 
- * @param pin The pin you want to test the connectivity of.
- * @return The connectivity result of the test.
- */
-GPIO_ConnectivityTestResult_t gpio_test_connectivity(GPIO_Pin_t* pin);
+void gpio_enable_port_clocks();
 
 // GPIO pin definitions
-#define __GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, pin) extern GPIO_Pin_t* P##portLetter##pin
+#define __GPIO_PIN_TYPE_DEFINITION(pin_id) \
+    struct __attribute__((packed)) __GPIO_PinType##pin_id { \
+        volatile uint32_t BITFIELD_SELECT(pin_id, mode, 2, 32); \
+        volatile uint32_t BITFIELD_SELECT(pin_id, output_type, 1, 32); \
+        volatile uint32_t BITFIELD_SELECT(pin_id, output_speed, 2, 32); \
+        volatile uint32_t BITFIELD_SELECT(pin_id, pull_mode, 2, 32); \
+        volatile uint32_t BITFIELD_SELECT(pin_id, input_data, 1, 32); \
+        volatile uint32_t BITFIELD_SELECT(pin_id, output_data, 1, 32); \
+        volatile uint16_t BITFIELD_SELECT(pin_id, set, 1, 16); \
+        volatile uint16_t BITFIELD_SELECT(pin_id, reset, 1, 16); \
+        volatile uint32_t : 32; \
+        volatile uint64_t BITFIELD_SELECT(pin_id, alternate, 4, 64); \
+        volatile uint32_t : 32; \
+    };
+
+#define __GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, pin) extern struct __GPIO_PinType##pin* const P##portLetter##pin;;
 #define __GPIO_SINGLE_PORT_DEFINITION(portLetter, portOffset) \
     __GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 0); \
     __GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 1); \
@@ -221,6 +145,23 @@ GPIO_ConnectivityTestResult_t gpio_test_connectivity(GPIO_Pin_t* pin);
     __GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 13); \
     __GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 14); \
     __GPIO_SINGLE_PIN_DEFINITON(portLetter, portOffset, 15)
+
+__GPIO_PIN_TYPE_DEFINITION(0); \
+__GPIO_PIN_TYPE_DEFINITION(1); \
+__GPIO_PIN_TYPE_DEFINITION(2); \
+__GPIO_PIN_TYPE_DEFINITION(3); \
+__GPIO_PIN_TYPE_DEFINITION(4); \
+__GPIO_PIN_TYPE_DEFINITION(5); \
+__GPIO_PIN_TYPE_DEFINITION(6); \
+__GPIO_PIN_TYPE_DEFINITION(7); \
+__GPIO_PIN_TYPE_DEFINITION(8); \
+__GPIO_PIN_TYPE_DEFINITION(9); \
+__GPIO_PIN_TYPE_DEFINITION(10); \
+__GPIO_PIN_TYPE_DEFINITION(11); \
+__GPIO_PIN_TYPE_DEFINITION(12); \
+__GPIO_PIN_TYPE_DEFINITION(13); \
+__GPIO_PIN_TYPE_DEFINITION(14); \
+__GPIO_PIN_TYPE_DEFINITION(15)
 
 __GPIO_SINGLE_PORT_DEFINITION(A, 0);
 __GPIO_SINGLE_PORT_DEFINITION(B, 1);

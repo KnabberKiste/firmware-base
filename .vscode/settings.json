@@ -4,6 +4,7 @@
         "freertos.h": "c",
         "freertosconfig.h": "c",
         "delay.h": "c",
-        "bit_manipulation.h": "c"
+        "bit_manipulation.h": "c",
+        "gpio.h": "c"
     }
 }

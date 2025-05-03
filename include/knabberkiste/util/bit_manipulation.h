@@ -38,3 +38,10 @@
 #define READ_BIT(target, offset) (READ_MASK_OFFSET((target), 1, (offset)))
 /// @brief Writes the bit at offset @p offset in the @p target.
 #define WRITE_BIT(target, offset, value) (WRITE_MASK_OFFSET((target), 1, (value), (offset)))
+
+/**
+ * @brief Bitfield selection macro. Creates the code for selecting the bitfield with the specified
+ * @p size at the @p offset in a register with size @p regsize. The bitfield will be named with the given
+ * @p name.
+ */
+#define BITFIELD_SELECT(offset, name, size, regsize) : ((offset) * (size)), name : (size), : ((regsize) - (((offset) + 1) * (size)))
