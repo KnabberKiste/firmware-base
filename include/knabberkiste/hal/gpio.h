@@ -10,18 +10,6 @@
 #include <stdbool.h>
 
 /**
- * @brief Enumeration of GPIO connectivity test results.
- */
-typedef enum {
-    /// @brief The GPIO seems to be tied to a high-impedance path.
-    GPIO_CT_FLOATING,
-    /// @brief The GPIO seems to be tied to a low-impedance path to ground.
-    GPIO_CT_TIED_LOW,
-    /// @brief The GPIO seems to be tied to a low-impedance path to VCC.
-    GPIO_CT_TIED_HIGH
-} GPIO_ConnectivityTestResult_t;
-
-/**
  * @brief Enumeration of GPIO pin modes.
  */
 typedef enum {
