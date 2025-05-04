@@ -6,6 +6,8 @@
         "delay.h": "c",
         "bit_manipulation.h": "c",
         "gpio.h": "c",
-        "knabbercan.h": "c"
+        "knabbercan.h": "c",
+        "wdg.h": "c",
+        "io.h": "c"
     }
 }
