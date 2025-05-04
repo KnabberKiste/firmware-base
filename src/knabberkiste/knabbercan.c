@@ -233,7 +233,7 @@ void kc_perform_addressing_sequence() {
             kc_event_emit(KC_EVENT_ADDRESSING_REQUIRED, 0, 0);
 
             // Wait a bit, how long is not crucial
-            for(int i = 0; i < 0xFFFF; i++) asm("NOP");
+            for(int i = 0; i < 0x7FFFF; i++) asm("NOP");
         }
 
         vcp_println("Waiting for ADDRESSING_NEXT");
@@ -298,7 +298,7 @@ void kc_perform_addressing_sequence() {
                 kc_process_incoming();
 
                 // Wait a bit, how long is not crucial
-                for(int i = 0; i < 0xFFFF; i++) asm("NOP");
+                for(int i = 0; i < 0x7FFFF; i++) asm("NOP");
 
                 if(!fifo_empty(kc_event_fifo)) {
                     if(fifo_get_direct(kc_event_fifo).event_id == KC_EVENT_ADDRESSING_SUCCESS) {
