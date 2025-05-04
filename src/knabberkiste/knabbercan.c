@@ -305,7 +305,7 @@ void kc_init() {
                 kc_process_incoming();
 
                 // Wait a bit, how long is not crucial
-                for(int i = 0; i < 0x8FFFF; i++) asm("NOP");
+                for(int i = 0; i < 0xFFFF; i++) asm("NOP");
 
                 if(!fifo_empty(kc_event_fifo)) {
                     if(fifo_get_direct(kc_event_fifo).event_id == KC_EVENT_ADDRESSING_SUCCESS) {
