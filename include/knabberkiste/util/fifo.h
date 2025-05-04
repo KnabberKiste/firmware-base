@@ -140,7 +140,7 @@ volatile void* _fifo_get_direct(volatile _FIFO_t* fifo);
  * 
  * @returns Returns the value of the element.
  */
-#define fifo_get_direct(fifo) *(TOKEN_CONCAT(__INTERNAL_FIFO_CLIENT_TYPE_, fifo)*)(_fifo_get_direct((_FIFO_t*)(&(fifo))))
+#define fifo_get_direct(fifo) (*(TOKEN_CONCAT(__INTERNAL_FIFO_CLIENT_TYPE_, fifo)*)(_fifo_get_direct((_FIFO_t*)(&(fifo)))))
 
 /**
  * @brief Gets the size of the queue, i.e. the max. number of elements.

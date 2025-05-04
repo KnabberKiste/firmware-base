@@ -8,6 +8,9 @@
         "io.h": "c",
         "portable.h": "c",
         "fifo.h": "c",
-        "gpio.h": "c"
+        "gpio.h": "c",
+        "varbuf.h": "c",
+        "error.h": "c",
+        "knabbercan.h": "c"
     }
 }

@@ -20,6 +20,7 @@
 
 #include <knabberkiste/io.h>
 #include <knabberkiste/util/macro_util.h>
+#include <knabberkiste/util/critical.h>
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -65,7 +66,23 @@ typedef enum {
      * @brief Error you can throw when someone passed you arguments
      * that are impossible to fulfill, i.e. logically impossbile.
      */
-    ERR_IMPOSSIBLE
+    ERR_IMPOSSIBLE,
+    /**
+     * @brief Error related to memory allocation.
+     */
+    ERR_ALLOCATION,
+    /**
+     * @brief An argument is out of range.
+     */
+    ERR_RANGE,
+    /**
+     * @brief An invalid knabberCAN frame was received.
+     */
+    ERR_KC_INVALID_FRAME = 0x20,
+    /**
+     * @brief An invalid command ID was received over knabberCAN.
+     */
+    ERR_KC_INVALID_COMMAND = 0x21
 } error_code_t;
 
 /**

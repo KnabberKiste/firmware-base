@@ -88,7 +88,7 @@ The first bit field in the CAN identifier describes the type of the frame. It is
 | 0       | `EVENT`                 |
 | 1       | `COMMAND`               |
 | 2       | `RESPONSE`              |
-| 2       | `ERROR`                 |
+| 3       | `ERROR`                 |
 
 ### FIRST - First frame flag
 This flag is set when this frame is the first CAN frame in the knabberCAN frame.
@@ -190,9 +190,12 @@ Error frames indicate a failure in the application's firmware.
 | `0x05`            | `ERR_OVERRUN`         | Data overrun error.                   |
 | `0x06`            | `ERR_BUFFER_FULL`     | Buffer full error.                    |
 | `0x07`            | `ERR_BUFFER_EMPTY`    | Buffer empty error.                   |
-| `0x08`            | `ERR_IMPOSSIBLE`      | Logically impossible arguments passed. |
+| `0x08`            | `ERR_IMPOSSIBLE`      | Logically impossible arguments passed.|
+| `0x09`            | `ERR_ALLOCATION`      | Memory allocation error.              |
+| `0x10`            | `ERR_RANGE`           | Some argument was out of range.       |
 | **knabberCAN errors** |||
-| `0x09`            | `ERR_INVALID_FRAME`   | A knabberCAN frame was not able to be parsed. |
+| `0x20`            | `ERR_INVALID_FRAME`   | A knabberCAN frame was not able to be parsed. |
+| `0x21`            | `ERR_INVALID_COMMAND`   | The knabberCAN command is not recognized. |
 | **Application-defined errors** |||
 | `0x40` .. `0xFF`  | Application-defined errors. ||
 
@@ -207,12 +210,12 @@ When a node is powered up, it must follow this procedure:
 1. Initialize internal resources and CAN hardware
 2. Assert if the `CONN_IN` signal is LOW. When `CONN_IN` is low, it performs the following steps:
     1. The node assigns address 1 to itself
-    2. An `ADDRESSING_START` event is emitted indicating the addressing procedure has been started
     3. The node checks the `CONN_OUT` signal. If it is HIGH, it performs the following steps:
-        1. The `DAISY_OUT` signal is set to HIGH for the next node
-        2. The node starts emitting `ADDRESSING_NEXT` events repeatedly until it receives an `ADDRESSING_SUCCESS` event.
-        3. The node waits for an `ADDRESSING_FINISHED` event to be received an then returns to the application.
-    4. If `CONN_OUT` is LOW, the node emits an `ADDRESSING_FINISHED` event and returns to the application.
+        1. An `ADDRESSING_START` event is emitted indicating the addressing procedure has been started
+        2. The `DAISY_OUT` signal is set to HIGH for the next node
+        3. The node starts emitting `ADDRESSING_NEXT` events repeatedly until it receives an `ADDRESSING_SUCCESS` event.
+        4. The node waits for an `ADDRESSING_FINISHED` event to be received an then returns to the application.
+    4. If `CONN_OUT` is LOW the node returns to the application.
 3. If `CONN_IN` is high, the node performs the following steps:
     1. The node waits for `DAISY_IN` to become HIGH.
     2. The node waits for an `ADDRESSING_NEXT` event to be received. It then assigns the next-higher address from the address of the node which sent the event to itself.

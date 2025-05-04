@@ -206,32 +206,32 @@ void can_transmit_frame(CAN_Frame_t* frame) {
     bool mailbox_free = READ_MASK(CAN->TSR, CAN_TSR_TME);
 
     if(mailbox_free) {
-        __disable_irq();
-        uint8_t mailbox_id = READ_MASK_OFFSET(CAN->TSR, 0b11, CAN_TSR_CODE_Pos);
-        CAN_TxMailBox_TypeDef* mailbox = &(CAN->sTxMailBox[mailbox_id]);
+        critical_block {
+            uint8_t mailbox_id = READ_MASK_OFFSET(CAN->TSR, 0b11, CAN_TSR_CODE_Pos);
+            CAN_TxMailBox_TypeDef* mailbox = &(CAN->sTxMailBox[mailbox_id]);
 
-        // Set the identifier register
-        WRITE_BIT(mailbox->TIR, CAN_TI0R_RTR_Pos, frame->rtr);
-        WRITE_BIT(mailbox->TIR, CAN_TI0R_IDE_Pos, frame->id_extended);
+            // Set the identifier register
+            WRITE_BIT(mailbox->TIR, CAN_TI0R_RTR_Pos, frame->rtr);
+            WRITE_BIT(mailbox->TIR, CAN_TI0R_IDE_Pos, frame->id_extended);
 
-        if(frame->id_extended) {
-            // Configure the extended ID
-            WRITE_MASK_OFFSET(mailbox->TIR, 0x3FFFF, frame->id, CAN_TI0R_EXID_Pos);
-        } else {
-            // Configure the standard ID
-            WRITE_MASK_OFFSET(mailbox->TIR, 0x7FF, frame->id, CAN_TI0R_STID_Pos);
+            if(frame->id_extended) {
+                // Configure the extended ID
+                WRITE_MASK_OFFSET(mailbox->TIR, 0x3FFFFFFF, frame->id, CAN_TI0R_EXID_Pos);
+            } else {
+                // Configure the standard ID
+                WRITE_MASK_OFFSET(mailbox->TIR, 0x7FFUL, frame->id, CAN_TI0R_STID_Pos);
+            }
+
+            // Set the data length control register
+            WRITE_MASK_OFFSET(mailbox->TDTR, 0xF, frame->dlc, CAN_TDT0R_DLC_Pos);
+
+            // Set the data low register
+            mailbox->TDLR = ((uint32_t*)(frame->data))[0];
+            mailbox->TDHR = ((uint32_t*)(frame->data))[1];
+
+            // Set the transmit request bit
+            SET_MASK(mailbox->TIR, CAN_TI0R_TXRQ);
         }
-
-        // Set the data length control register
-        WRITE_MASK_OFFSET(mailbox->TDTR, 0xF, frame->dlc, CAN_TDT0R_DLC_Pos);
-
-        // Set the data low register
-        mailbox->TDLR = ((uint32_t*)(frame->data))[0];
-        mailbox->TDHR = ((uint32_t*)(frame->data))[1];
-
-        // Set the transmit request bit
-        SET_MASK(mailbox->TIR, CAN_TI0R_TXRQ);
-        __enable_irq();
     } else {
         // Append the frame to the transmit queue
         fifo_put(bxcan_tx_queue, *frame);
@@ -254,7 +254,7 @@ CAN_ReceivedFrame_t can_read_frame_from_fifo(CAN_FIFO_t fifo) {
     recv_frame.frame.rtr = READ_MASK_OFFSET(mailbox->RIR, 0b1, CAN_RI0R_RTR_Pos);
     recv_frame.frame.id_extended = READ_MASK_OFFSET(mailbox->RIR, 0b1, CAN_RI0R_IDE_Pos);
     if(recv_frame.frame.id_extended) {
-        recv_frame.frame.id = READ_MASK_OFFSET(mailbox->RIR, 0x3FFFF, CAN_RI0R_EXID_Pos);
+        recv_frame.frame.id = READ_MASK_OFFSET(mailbox->RIR, 0x3FFFFFFF, CAN_RI0R_EXID_Pos);
     } else {
         recv_frame.frame.id = READ_MASK_OFFSET(mailbox->RIR, 0x7FF, CAN_RI0R_STID_Pos);
     }
