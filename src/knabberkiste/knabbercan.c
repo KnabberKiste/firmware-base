@@ -73,6 +73,9 @@ static void kc_frame_transmit(
     size_t payload_size,
     void* payload
 );
+static void kc_check_if_addressing_required();
+static bool kc_in_connected();
+static bool kc_out_connected();
 
 /* CAN bus callbacks*/
 void can_recv_callback(CAN_ReceivedFrame_t frame) {
@@ -151,16 +154,27 @@ void can_recv_callback(CAN_ReceivedFrame_t frame) {
 
 void can_error_callback(CAN_ErrorCode_t error_code) {
     // Errors are ignored by knabberCAN
-    vcp_println("warn: can error!");
 }
 
 /* Event and command handlers */
 static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
-    if(kc_state == KC_STATE_ADDRESSING) {
-        if(fifo_full(kc_event_fifo)) {
-            error_throw(ERR_OVERRUN, "Internal event fifo overrun.");
-        }
-        fifo_put(kc_event_fifo, event_frame);
+    switch(event_frame.event_id) {
+        case KC_EVENT_ADDRESSING_FINISHED:
+        case KC_EVENT_ADDRESSING_NEXT:
+        case KC_EVENT_ADDRESSING_SUCCESS:
+            if(kc_state == KC_STATE_ADDRESSING) {
+                if(fifo_full(kc_event_fifo)) {
+                    error_throw(ERR_OVERRUN, "Internal event fifo overrun.");
+                }
+                fifo_put(kc_event_fifo, event_frame);
+            };
+            break;
+
+        case KC_EVENT_ADDRESSING_REQUIRED:
+            if(kc_state == KC_STATE_READY) {
+                kc_perform_addressing_sequence();
+            }
+            break;
     }
 }
 
@@ -197,10 +211,135 @@ static void kc_frame_transmit(
 
         can_transmit_frame(&frame);
 
-        id.components.counter++;
+        id.components.counter = (id.components.counter + 1) % (KC_FRAME_COUNTER_MAX + 1);
+    }
+}
+
+void kc_perform_addressing_sequence() {
+    vcp_println("Addressing requested");
+
+    kc_event_emit(KC_EVENT_ADDRESSING_REQUIRED, 0, 0);
+
+    kc_state = KC_STATE_ADDRESSING;
+
+    /* Assert CONN_IN */
+    if(kc_in_connected()) {
+        // Another node is connected to the IN port
+
+        vcp_println("Waiting for DAISY_IN");
+        
+        // Wait for the DAISY signal to go high
+        while(!(KC_DAISY_IN_PIN->input_data)) {
+            kc_event_emit(KC_EVENT_ADDRESSING_REQUIRED, 0, 0);
+
+            // Wait a bit, how long is not crucial
+            for(int i = 0; i < 0xFFFF; i++) asm("NOP");
+        }
+
+        vcp_println("Waiting for ADDRESSING_NEXT");
+
+        // Wait for ADDRESSING_NEXT
+        while(1) {
+            if(!fifo_empty(kc_event_fifo)) {
+                KC_Received_EventFrame_t evt;
+                fifo_get(kc_event_fifo, evt);
+                if(evt.event_id == KC_EVENT_ADDRESSING_NEXT) {
+                    // Assign the sender's address + 1 to this node
+                    kc_node_address = evt.sender_address + 1;
+
+                    // Emit ADDRESSING_SUCCESS
+                    kc_event_emit(KC_EVENT_ADDRESSING_SUCCESS, 0, 0);
+                    break;
+                }
+            }
+
+            kc_process_incoming();
+        }
+
+        vcp_println("Waiting for ADDRESSING_FINISHED");
+
+        
+        if(kc_out_connected()) {
+            // Wait for ADDRESSING_FINISHED
+            while(1) {
+                if(!fifo_empty(kc_event_fifo)) {
+                    KC_Received_EventFrame_t evt = fifo_get_direct(kc_event_fifo);
+                    if(evt.event_id == KC_EVENT_ADDRESSING_FINISHED) {
+                        kc_bus_size = evt.sender_address;
+                        break;
+                    }
+                }
+    
+                kc_process_incoming();
+            }
+        } else {
+            kc_event_emit(KC_EVENT_ADDRESSING_FINISHED, 0, 0);
+        }
+
+        vcp_println("Addressing is finished!");
+    } else {
+        // This is the first node in the bus
+
+        // Start the addressing procedure
+        kc_node_address = 1;
+
+        if(kc_out_connected()) {
+            // This is not the only node in the bus
+            kc_event_emit(KC_EVENT_ADDRESSING_START, 0, 0);
+
+            vcp_println("Waiting for ADDRESSING_SUCCESS...");
+
+            // Set the DAISY OUT pin
+            KC_DAISY_OUT_PIN->output_data = 1;
+
+            // Emit ADDRESSING_NEXT until receiving ADDRESSING_SUCCESS
+            while(1) {
+                kc_event_emit(KC_EVENT_ADDRESSING_NEXT, 0, 0);
+                kc_process_incoming();
+
+                // Wait a bit, how long is not crucial
+                for(int i = 0; i < 0xFFFF; i++) asm("NOP");
+
+                if(!fifo_empty(kc_event_fifo)) {
+                    if(fifo_get_direct(kc_event_fifo).event_id == KC_EVENT_ADDRESSING_SUCCESS) {
+                        // The next node is addressed successfully
+                        break;
+                    } else {
+                        error_throw(ERR_RUNTIME_GENERIC, "Unexpected event received.");
+                    }
+                }
+            }
+
+            vcp_println("Waiting for ADDRESSING_FINISHED");
+
+            // Wait for ADDRESSING_FINISHED
+            while(1) {
+                if(!fifo_empty(kc_event_fifo)) {
+                    KC_Received_EventFrame_t evt = fifo_get_direct(kc_event_fifo);
+                    if(evt.event_id == KC_EVENT_ADDRESSING_FINISHED) {
+                        kc_bus_size = evt.sender_address;
+                        break;
+                    }
+                }
+    
+                kc_process_incoming();
+            }
+        } else {
+            // This is the only node on the bus
+            vcp_println("Addressing skipped.");
+        }
+
+        vcp_println("Addressing finished.");
     }
 
+    // Clear the DAISY pin
+    KC_DAISY_OUT_PIN->output_data = 0;
+
     KC_INLED_GREEN_PIN->output_data ^= 1;
+
+    kc_state = KC_STATE_READY;
+
+    vcp_println("Addressing performed!");
 }
 
 /* Public function definitions */
@@ -229,6 +368,7 @@ void kc_init() {
     kc_event_define(KC_EVENT_ADDRESSING_NEXT, kc_internal_event_handler);
     kc_event_define(KC_EVENT_ADDRESSING_SUCCESS, kc_internal_event_handler);
     kc_event_define(KC_EVENT_ADDRESSING_FINISHED, kc_internal_event_handler);
+    kc_event_define(KC_EVENT_ADDRESSING_REQUIRED, kc_internal_event_handler);
     
     /* Initialize the CAN peripheral */
     can_init(1000000, CAN_TESTMODE_NONE);
@@ -242,101 +382,9 @@ void kc_init() {
         0x00000000
     );
 
-    kc_state = KC_STATE_ADDRESSING;
-
-    /* Assert CONN_IN */
-    if(KC_CONN_IN_PIN->input_data) {
-        // Another node is connected to the IN port
-        
-        // Wait for the DAISY signal to go high
-        while(!(KC_DAISY_IN_PIN->input_data));
-
-        // Wait for ADDRESSING_NEXT
-        while(1) {
-            if(!fifo_empty(kc_event_fifo)) {
-                KC_Received_EventFrame_t evt;
-                fifo_get(kc_event_fifo, evt);
-                if(evt.event_id == KC_EVENT_ADDRESSING_NEXT) {
-                    // Assign the sender's address + 1 to this node
-                    kc_node_address = evt.sender_address + 1;
-
-                    // Emit ADDRESSING_SUCCESS
-                    kc_event_emit(KC_EVENT_ADDRESSING_SUCCESS, 0, 0);
-                    break;
-                }
-            }
-
-            kc_process_incoming();
-        }
-
-        
-        if(KC_CONN_OUT_PIN->output_data) {
-            // Wait for ADDRESSING_FINISHED
-            while(1) {
-                if(!fifo_empty(kc_event_fifo)) {
-                    KC_Received_EventFrame_t evt = fifo_get_direct(kc_event_fifo);
-                    if(evt.event_id == KC_EVENT_ADDRESSING_FINISHED) {
-                        kc_bus_size = evt.sender_address;
-                        break;
-                    }
-                }
-    
-                kc_process_incoming();
-            }
-        } else {
-            kc_event_emit(KC_EVENT_ADDRESSING_FINISHED, 0, 0);
-        }
-    } else {
-        // This is the first node in the bus
-
-        // Start the addressing procedure
-        kc_node_address = 1;
-
-        if(KC_CONN_OUT_PIN->input_data) {
-            // This is not the only node in the bus
-            kc_event_emit(KC_EVENT_ADDRESSING_START, 0, 0);
-
-            // Set the DAISY OUT pin
-            KC_DAISY_OUT_PIN->output_data = 1;
-
-            // Emit ADDRESSING_NEXT until receiving ADDRESSING_SUCCESS
-            while(1) {
-                kc_event_emit(KC_EVENT_ADDRESSING_NEXT, 0, 0);
-                kc_process_incoming();
-
-                // Wait a bit, how long is not crucial
-                for(int i = 0; i < 0xFFFF; i++) asm("NOP");
-
-                if(!fifo_empty(kc_event_fifo)) {
-                    if(fifo_get_direct(kc_event_fifo).event_id == KC_EVENT_ADDRESSING_SUCCESS) {
-                        // The next node is addressed successfully
-                        break;
-                    } else {
-                        error_throw(ERR_RUNTIME_GENERIC, "Unexpected event received.");
-                    }
-                }
-            }
-
-            // Wait for ADDRESSING_FINISHED
-            while(1) {
-                if(!fifo_empty(kc_event_fifo)) {
-                    KC_Received_EventFrame_t evt = fifo_get_direct(kc_event_fifo);
-                    if(evt.event_id == KC_EVENT_ADDRESSING_FINISHED) {
-                        kc_bus_size = evt.sender_address;
-                        break;
-                    }
-                }
-    
-                kc_process_incoming();
-            }
-        } else {
-            // This is the only node on the bus
-        }
-    }
-
+    kc_event_emit(KC_EVENT_ADDRESSING_REQUIRED, 0, 0);
+    kc_perform_addressing_sequence();
     kc_event_emit(KC_EVENT_ONLINE, 0, 0);
-
-    kc_state = KC_STATE_READY;
 }
 
 void kc_command_define(KC_TransactionID_t command_id, KC_CommandCallback_t callback) {
@@ -368,6 +416,8 @@ void kc_event_emit(KC_TransactionID_t event_id, void* payload, size_t payload_si
 }
 
 void kc_process_incoming() {
+    kc_check_if_addressing_required();
+
     while(!fifo_empty(kc_recv_fifo)) {
         KC_Received_Frame_t frame;
         fifo_get(kc_recv_fifo, frame);
@@ -397,7 +447,52 @@ void kc_process_incoming() {
 
         // Deallocate the payload to avoid a memory leak
         varbuf_clear(frame.payload);
-
-        KC_INLED_YELLOW_PIN->output_data ^= 1;
     }
+}
+
+static void kc_check_if_addressing_required() {
+    static bool has_been_checked = false;
+    static bool conn_in_previous_state = 0;
+    static bool conn_out_previous_state = 0;
+
+    bool conn_in_current_state = kc_in_connected();
+    bool conn_out_current_state = kc_out_connected();
+
+    if(has_been_checked && kc_state == KC_STATE_READY) {
+        // Check the CONN_IN pin for changes
+        if(
+            conn_in_current_state != conn_in_previous_state ||
+            conn_out_previous_state != conn_out_current_state
+        ) {
+            vcp_println("Connection change detected!");
+            kc_perform_addressing_sequence();
+        }
+    }
+
+    conn_in_previous_state = conn_in_current_state;
+    conn_out_previous_state = conn_out_current_state;
+    has_been_checked = true;
+}
+
+static bool kc_in_connected() {
+    // LED pins must by Hi-Z for this
+    KC_INLED_GREEN_PIN->mode = GPIO_MODE_ANALOG;
+
+    bool result = KC_CONN_IN_PIN->input_data;
+
+    // Reset LED pins
+    KC_INLED_GREEN_PIN->mode = GPIO_MODE_OUTPUT;
+    
+    return result;
+}
+static bool kc_out_connected() {
+    // LED pins must by Hi-Z for this
+    KC_OUTLED_GREEN_PIN->mode = GPIO_MODE_ANALOG;
+
+    bool result = KC_CONN_OUT_PIN->input_data;
+
+    // Reset LED pins
+    KC_OUTLED_GREEN_PIN->mode = GPIO_MODE_OUTPUT;
+    
+    return result;
 }

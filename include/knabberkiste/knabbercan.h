@@ -62,6 +62,7 @@ typedef KC_Response_t (*KC_CommandCallback_t)(KC_Received_CommandFrame_t);
 #define KC_EVENT_ADDRESSING_SUCCESS 0x01
 #define KC_EVENT_ADDRESSING_NEXT 0x02
 #define KC_EVENT_ADDRESSING_FINISHED 0x03
+#define KC_EVENT_ADDRESSING_REQUIRED 0x04
 #define KC_EVENT_ONLINE 0x10
 
 /* Special addresses */
