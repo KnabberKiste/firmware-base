@@ -48,7 +48,7 @@ The `CONN` signals are placed on pin 7 and 8 of the connector. They are connecte
 When an `IN` and an `OUT` port are connected, both `CONN` signals will assert as HIGH. This is due to the 100 Ohm resistor pulling the signal on high, overriding the 10 kiloohm pull-down resistor.
 
 #### DAISY signal
-Every connector also features a `DAISY` signal on pin 3. This signal is used mainly for addressing. It must be used as an output on the `OUT` port and as an input on the `IN` port. To avoid damage on micrcontroller outputs, it is connected through a 100 Ohm resistor on the `OUT` port.
+Every connector also features a `DAISY` signal on pin 3. This signal is used mainly for addressing. As it is used bidirectionally, it must initially be configured as an input AND NEVER AS AN OUTPUT. Signal transmission is done only using the pull-up and pull-down resistors.
 
 ## Addressing scheme
 
@@ -208,23 +208,27 @@ The payload of error frames contains an error message which can be specified by 
 When a node is powered up, it must follow this procedure:
 
 1. Initialize internal resources and CAN hardware
-2. Assert if the `CONN_IN` signal is LOW. When `CONN_IN` is low, it performs the following steps:
+2. As soon as the node is ready for addressing, it sets it's `DAISY` signal to be pulled-up.
+3. Assert if the `CONN_IN` signal is LOW. When `CONN_IN` is low, it performs the following steps:
     1. The node assigns address 1 to itself
     3. The node checks the `CONN_OUT` signal. If it is HIGH, it performs the following steps:
         1. An `ADDRESSING_START` event is emitted indicating the addressing procedure has been started
-        2. The `DAISY_OUT` signal is set to HIGH for the next node
-        3. The node starts emitting `ADDRESSING_NEXT` events repeatedly until it receives an `ADDRESSING_SUCCESS` event.
-        4. The node waits for an `ADDRESSING_FINISHED` event to be received an then returns to the application.
+        2. The node waits for the next node to set it's DAISY signal to be pulled-up
+        3. The node strongly ties `DAISY_OUT` to ground.
+        4. The node emits an `ADDRESSING_NEXT` event for the next node to get it's address from
+        5. The node waits for an `ADDRESSING_FINISHED` event to be received an then returns to the application.
     4. If `CONN_OUT` is LOW the node returns to the application.
-3. If `CONN_IN` is high, the node performs the following steps:
-    1. The node waits for `DAISY_IN` to become HIGH.
+4. If `CONN_IN` is high, the node performs the following steps:
+    1. The node waits for `DAISY_IN` to become LOW.
     2. The node waits for an `ADDRESSING_NEXT` event to be received. It then assigns the next-higher address from the address of the node which sent the event to itself.
     3. The node emits an `ADDRESSING_SUCCESS` message with it's newly-assigned address.
     4. The node checks the `CONN_OUT` signal. If it is HIGH, it performs the following steps:
-        1. The `DAISY_OUT` signal is set to HIGH for the next node
-        2. The node starts emitting `ADDRESSING_NEXT` events repeatedly until it receives an `ADDRESSING_SUCCESS` event.
-        3. The node waits for an `ADDRESSING_FINISHED` event to be received an then returns to the application.
+        1. The node waits for the next node to set it's DAISY signal to be pulled-up
+        2. The node strongly `DAISY_OUT` to ground.
+        3. The node emits an `ADDRESSING_NEXT` event for the next node to get it's address from
+        4. The node waits for an `ADDRESSING_FINISHED` event to be received an then returns to the application.
     5. If `CONN_OUT` is LOW, the node emits an `ADDRESSING_FINISHED` event and returns to the application.
+5. After addressing is finished, the `DAISY_IN` signal is set to pull-down again.
 
 This results in every node being assigned a node ID incrementally from the first OUT port to the last IN port, accounting for varying boot times.
 
