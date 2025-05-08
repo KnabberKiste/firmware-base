@@ -181,11 +181,18 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
         case KC_EVENT_ADDRESSING_SUCCESS:
             break;
 
+        case KC_EVENT_ADDRESSING_START:
+            kc_state = KC_STATE_ADDRESSING;
+            KC_DAISY_IN_PIN->pull_mode = GPIO_PULLUP;
+            break:
+
         case KC_EVENT_ADDRESSING_REQUIRED:
             kc_state = KC_STATE_ADDRESSING;
             KC_DAISY_IN_PIN->pull_mode = GPIO_PULLUP;
-
+            
             if(kc_in_connected()) {
+                kc_event_emit(KC_EVENT_ADDRESSING_START, 0, 0);
+
                 // This is the first node on the bus, and it must start the
                 // addressing procedure
                 kc_node_address = 1;
@@ -299,6 +306,7 @@ void kc_init() {
     KC_STBY_PIN->mode = GPIO_MODE_OUTPUT;
 
     /* Define pre-defined commands and events */
+    kc_event_define(KC_EVENT_ADDRESSING_START, kc_internal_event_handler);
     kc_event_define(KC_EVENT_ADDRESSING_NEXT, kc_internal_event_handler);
     kc_event_define(KC_EVENT_ADDRESSING_SUCCESS, kc_internal_event_handler);
     kc_event_define(KC_EVENT_ADDRESSING_FINISHED, kc_internal_event_handler);

@@ -136,6 +136,7 @@ Which event has happened is indicated by the `TID` bits in the CAN identifier. T
 | `0x02`            | `void`            | `ADDRESSING_SUCCESS`      |
 | `0x03`            | `void`            | `ADDRESSING_NEXT`         |
 | `0x04`            | `void`            | `ADDRESSING_FINISHED`     |
+| `0x05`            | `void`            | `ADDRESSING_REQUIRED`     |
 | **Power control** |||
 | `0x10`            | `void`            | `ONLINE`                  |
 | **Application-defined events** |||
@@ -208,9 +209,10 @@ The payload of error frames contains an error message which can be specified by 
 When a node is powered up, it must follow this procedure:
 
 1. Initialize internal resources and CAN hardware
-2. As soon as the node is ready for addressing, it sets it's `DAISY` signal to be pulled-up.
+2. The node then requests for addressing to start by emitting `ADDRESSING_REQUIRED`
+2. As soon as the node receives `ADDRESSING_START`, it sets it's `DAISY` signal to be pulled-up.
 3. Assert if the `CONN_IN` signal is LOW. When `CONN_IN` is low, it performs the following steps:
-    1. The node assigns address 1 to itself
+    1. The node assigns address 1 to itself and emits `KC_ADDRESSING_START`
     3. The node checks the `CONN_OUT` signal. If it is HIGH, it performs the following steps:
         1. An `ADDRESSING_START` event is emitted indicating the addressing procedure has been started
         2. The node waits for the next node to set it's DAISY signal to be pulled-up
