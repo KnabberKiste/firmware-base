@@ -402,6 +402,16 @@ void kc_process_incoming() {
                 break;
 
             case KC_FRAMETYPE_COMMAND:
+                if(kc_command_callbacks[frame.transaction_id] != 0) {
+                    KC_Received_CommandFrame_t command_frame;
+                    command_frame.command_id = frame.transaction_id;
+                    command_frame.payload = frame.payload;
+                    command_frame.payload_size = frame.payload_size;
+                    command_frame.receiver_address = frame.receiver_address;
+                    command_frame.sender_address = frame.sender_address;
+
+                    kc_command_callbacks[frame.transaction_id](command_frame);
+                }
                 break; // TODO IMPLEMENT THIS
 
             case KC_FRAMETYPE_RESPONSE:
