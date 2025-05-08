@@ -273,6 +273,17 @@ static void kc_address_end() {
     if(kc_node_address) {
         // Emit the ONLINE event if addressed successfully
         kc_event_emit(KC_EVENT_ONLINE, 0, 0);
+
+        // Configure the CAN filter bank to match node-specific frames
+        // Broadcast frames are accepted by filterbank 1
+        can_configure_filter_bank(
+            CAN_FILTERBANK_1,
+            CAN_FIFO_0,
+            CAN_FILTERBANK_WIDTH_32BIT,
+            CAN_FILTERBANK_MODE_MASK,
+            0b00000000000000000000000000000100 | kc_node_address << 3,
+            0b00000000000000000000001111111110
+        );
     } else {
         // Addressing hasn't been successful, request another addressing procedure
         kc_request_addressing();
@@ -339,13 +350,14 @@ void kc_init() {
     /* Initialize the CAN peripheral */
     can_init(1000000, CAN_TESTMODE_NONE);
 
+    // Configure the filter bank to match broadcast frames
     can_configure_filter_bank(
         CAN_FILTERBANK_0,
         CAN_FIFO_0,
         CAN_FILTERBANK_WIDTH_32BIT,
         CAN_FILTERBANK_MODE_MASK,
-        0x00000000,
-        0x00000000
+        0b00000000000000000000000000000100,
+        0b00000000000000000000001111111110
     );
 
     kc_request_addressing();
@@ -381,8 +393,6 @@ void kc_event_emit(KC_TransactionID_t event_id, void* payload, size_t payload_si
 
 void kc_process_incoming() {
     kc_check_if_addressing_required();
-
-    // TODO implement hardware message filtering
 
     while(!fifo_empty(kc_recv_fifo)) {
         KC_Received_Frame_t frame;
