@@ -10,62 +10,130 @@
 #include <stdint.h>
 
 /* Type definitions */
+/**
+ * @brief Type used for knabberCAN transaction IDs.
+ */
 typedef uint8_t KC_TransactionID_t;
+/**
+ * @brief Type used for knabberCAN addresses.
+ */
 typedef uint8_t KC_Address_t;
 
+/**
+ * @brief KnabberCAN state machine enumerator.
+ */
 typedef enum {
+    /// @brief KnabberCAN is not currently initialized and therefore not working.
     KC_STATE_UNINITIALIZED = 0,
+    /// @brief KnabberCAN is currently in the process of initializing.
     KC_STATE_INITIALIZING,
+    /// @brief KnabberCAN is currently in the process of addressing the bus.
     KC_STATE_ADDRESSING,
+    /// @brief KnabberCAN is ready for operation.
     KC_STATE_READY
 } KC_State_t;
 
+/**
+ * @brief KnabberCAN frame type enumerator.
+ */
 typedef enum {
+    /// @brief Indicates an event frame.
     KC_FRAMETYPE_EVENT = 0,
+    /// @brief Indicates a command frame.
     KC_FRAMETYPE_COMMAND = 1,
+    /// @brief Indicates a response frame.
     KC_FRAMETYPE_RESPONSE = 2,
+    /// @brief Indicates an error frame.
     KC_FRAMETYPE_ERROR = 3
 } KC_FrameType_t;
 
+/**
+ * @brief Struct representing an event frame which was received from the knabberCAN bus.
+ */
 typedef struct {
+    /// @brief Address of the node which emitted the event.
     KC_Address_t sender_address;
+    /// @brief Unique identifier of the event.
     KC_TransactionID_t event_id;
+    /// @brief Size of the payload which is stored in @ref payload.
     size_t payload_size;
+    /// @brief Pointer to a buffer storing the payload. This is allocated using @ref varbuf.h.
     void* payload;
 } KC_Received_EventFrame_t;
 
+/**
+ * @brief Struct representing a command frame which was received from the knabberCAN bus.
+ */
 typedef struct {
+    /// @brief Address of the node which sent the command.
     KC_Address_t sender_address;
+    /// @brief Address of the node which received the command. This should either be the receiver address, or the broadcast address.
     KC_Address_t receiver_address;
+    /// @brief Unique identifier of the command.
     KC_TransactionID_t command_id;
+    /// @brief Size of the payload which is stored in @ref payload.
     size_t payload_size;
+    /// @brief Pointer to a buffer storing the payload. This is allocated using @ref varbuf.h.
     void* payload;
 } KC_Received_CommandFrame_t;
 
-typedef struct {
-    size_t payload_size;
-    void* payload;
-} KC_Response_t;
+/**
+ * @brief Placeholder type for a knabberCAN response.
+ * 
+ * @todo implement this.
+ */
+typedef void KC_Response_t;
 
+/**
+ * @brief Struct representing an error frome received from the knabberCAN bus.
+ * 
+ */
 typedef struct {
+    /// @brief Address from which the error was sent.
     KC_Address_t sender_address;
+    /// @brief Address which should receive the error. This should either be the receiver address, or the broadcast address.
     KC_Address_t receiver_address;
+    /// @brief Error code received with the error.
     KC_TransactionID_t error_code;
+    /// @brief Error message received with the error.
     const char* error_message;
 } KC_Received_ErrorFrame_t;
 
+/// @brief Type for a callback which may be assigned to an event.
 typedef void (*KC_EventCallback_t)(KC_Received_EventFrame_t);
+/// @brief Type for a callback which may be assigned to handle a command.
 typedef KC_Response_t (*KC_CommandCallback_t)(KC_Received_CommandFrame_t);
 
 /* Event definitions */
+/**
+ * @brief KnabberCAN `ADDRESSING_START` event ID.
+ */
 #define KC_EVENT_ADDRESSING_START 0x00
+/**
+ * @brief KnabberCAN `ADDRESSING_SUCCESS` event ID.
+ */
 #define KC_EVENT_ADDRESSING_SUCCESS 0x01
+/**
+ * @brief KnabberCAN `ADDRESSING_NEXT` event ID.
+ */
 #define KC_EVENT_ADDRESSING_NEXT 0x02
+/**
+ * @brief KnabberCAN `ADDRESSING_FINISHED` event ID.
+ */
 #define KC_EVENT_ADDRESSING_FINISHED 0x03
+/**
+ * @brief KnabberCAN `ADDRESSING_REQUIRED` event ID.
+ */
 #define KC_EVENT_ADDRESSING_REQUIRED 0x04
+/**
+ * @brief KnabberCAN `ONLINE` event ID.
+ */
 #define KC_EVENT_ONLINE 0x10
 
 /* Special addresses */
+/**
+ * @brief KnabberCAN broadcast address.
+ */
 #define KC_ADDRESS_BROADCAST 0
 
 /**
@@ -73,6 +141,9 @@ typedef KC_Response_t (*KC_CommandCallback_t)(KC_Received_CommandFrame_t);
  */
 extern KC_Address_t kc_node_address;
 
+/**
+ * @brief Current size of the knabberCAN bus.
+ */
 extern KC_Address_t kc_bus_size;
 
 /**
@@ -106,7 +177,7 @@ void kc_command_define(KC_TransactionID_t command_id, KC_CommandCallback_t callb
  * @brief Defines an event with the given event ID and attaches the specified
  * callback to the event.
  * 
- * @param command_id Event ID to which the command corresponds.
+ * @param event_id Event ID to which the command corresponds.
  * @param callback Callback which will be called when the event is received.
  * 
  * @throws ERR_RUNTIME_GENERAL The specified event ID has already been defined.
