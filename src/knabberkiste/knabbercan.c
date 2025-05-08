@@ -187,11 +187,12 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
             break:
 
         case KC_EVENT_ADDRESSING_REQUIRED:
-            // Ignore requests while already addressing
-            if(kc_state == KC_STATE_ADDRESSING) break;
-
+            // Indicate readyness for addressing
             kc_state = KC_STATE_ADDRESSING;
             KC_DAISY_IN_PIN->pull_mode = GPIO_PULLUP;
+
+            // Ignore requests while already addressing
+            if(kc_state == KC_STATE_ADDRESSING) break;
 
             if(kc_in_connected()) {
                 kc_event_emit(KC_EVENT_ADDRESSING_START, 0, 0);
@@ -207,7 +208,10 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
 
 /* Internal function definitions */
 static void kc_request_addressing() {
+    // Indicate readyness for addressing
     kc_state = KC_STATE_ADDRESSING;
+    KC_DAISY_IN_PIN->pull_mode = GPIO_PULLUP;
+    
     kc_event_emit(KC_EVENT_ADDRESSING_REQUIRED, 0, 0);
 }
 
