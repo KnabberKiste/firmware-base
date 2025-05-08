@@ -4,6 +4,7 @@
 #include <knabberkiste/util/fifo.h>
 #include <knabberkiste/util/error.h>
 #include <knabberkiste/util/varbuf.h>
+#include <string.h>
 
 /* Constants */
 #define KC_NUMBER_OF_TRANSACTION_IDS 256
@@ -77,6 +78,7 @@ static bool kc_in_connected();
 static bool kc_out_connected();
 static void kc_request_addressing();
 static void kc_address_next();
+static void kc_address_end();
 
 /* CAN bus callbacks*/
 void can_recv_callback(CAN_ReceivedFrame_t frame) {
@@ -161,16 +163,17 @@ void can_error_callback(CAN_ErrorCode_t error_code) {
 static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
     switch(event_frame.event_id) {
         case KC_EVENT_ADDRESSING_FINISHED:
-            kc_addressing_end();
-            if(!kc_node_address) {
-                kc_request_addressing();
-            }
+            // Set the bus size
+            kc_bus_size = event_frame.sender_address;
+            kc_address_end();
             break;
 
         case KC_EVENT_ADDRESSING_NEXT:
             if(KC_DAISY_IN_PIN->input_data == 0) {
                 // This is the node currently being addressed.
                 kc_node_address = event_frame.sender_address + 1;
+
+                vcp_println("Node address received!");
                 
                 // Address the next node
                 kc_event_emit(KC_EVENT_ADDRESSING_SUCCESS, 0, 0);
@@ -182,19 +185,21 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
             break;
 
         case KC_EVENT_ADDRESSING_START:
+            vcp_println("Addressing procedure started.");
             kc_state = KC_STATE_ADDRESSING;
             KC_DAISY_IN_PIN->pull_mode = GPIO_PULLUP;
-            break:
+            break;
 
         case KC_EVENT_ADDRESSING_REQUIRED:
+            // Ignore requests while already addressing
+            if(kc_state == KC_STATE_ADDRESSING) { break; }
+
             // Indicate readyness for addressing
             kc_state = KC_STATE_ADDRESSING;
             KC_DAISY_IN_PIN->pull_mode = GPIO_PULLUP;
 
-            // Ignore requests while already addressing
-            if(kc_state == KC_STATE_ADDRESSING) break;
-
-            if(kc_in_connected()) {
+            if(kc_in_connected() == false) {
+                vcp_println("Initiating addressing procedure...");
                 kc_event_emit(KC_EVENT_ADDRESSING_START, 0, 0);
 
                 // This is the first node on the bus, and it must start the
@@ -207,12 +212,10 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
 }
 
 /* Internal function definitions */
-static void kc_request_addressing() {
-    // Indicate readyness for addressing
-    kc_state = KC_STATE_ADDRESSING;
-    KC_DAISY_IN_PIN->pull_mode = GPIO_PULLUP;
-    
+static void kc_request_addressing() {    
+    KC_Received_EventFrame_t ef = { .event_id = KC_EVENT_ADDRESSING_REQUIRED, .payload = 0, .payload_size = 0, .sender_address = 0 };
     kc_event_emit(KC_EVENT_ADDRESSING_REQUIRED, 0, 0);
+    kc_internal_event_handler(ef);
 }
 
 static void kc_frame_transmit(
@@ -262,14 +265,24 @@ static void kc_address_end() {
     // Pull down the DAISY signal for the previous node
     KC_DAISY_IN_PIN->pull_mode = GPIO_PULLDOWN;
 
+    // Inform the user
+    char info_string[64] = { 0 };
+    snprintf(info_string, 64, "Addressing finished [ Node address = %d, Bus size = %d ]", kc_node_address, kc_bus_size);
+    vcp_println(info_string);
+
     if(kc_node_address) {
         // Emit the ONLINE event if addressed successfully
         kc_event_emit(KC_EVENT_ONLINE, 0, 0);
+    } else {
+        // Addressing hasn't been successful, request another addressing procedure
+        kc_request_addressing();
     }
 }
 
 static void kc_address_next() {
     if(kc_out_connected()) {
+        vcp_println("Addressing next node...");
+
         // There's at least one more node in the chain
         // Wait for the next node to be ready for addressing
         KC_DAISY_OUT_PIN->mode = GPIO_MODE_INPUT;
@@ -283,6 +296,10 @@ static void kc_address_next() {
         kc_event_emit(KC_EVENT_ADDRESSING_NEXT, 0, 0);
     } else {
         // This is the last node in the chain
+        // Notify the other nodes that the addressing has been finished
+        kc_event_emit(KC_EVENT_ADDRESSING_FINISHED, 0, 0);
+
+        kc_bus_size = kc_node_address;
         kc_address_end();
     }
 }
@@ -413,8 +430,7 @@ static void kc_check_if_addressing_required() {
             conn_in_current_state != conn_in_previous_state ||
             conn_out_previous_state != conn_out_current_state
         ) {
-            vcp_println("Connection change detected!");
-            kc_perform_addressing_sequence();
+            kc_request_addressing();
         }
     }
 
