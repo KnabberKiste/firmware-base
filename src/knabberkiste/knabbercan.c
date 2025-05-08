@@ -365,6 +365,8 @@ void kc_event_emit(KC_TransactionID_t event_id, void* payload, size_t payload_si
 void kc_process_incoming() {
     kc_check_if_addressing_required();
 
+    // TODO implement hardware message filtering
+
     while(!fifo_empty(kc_recv_fifo)) {
         KC_Received_Frame_t frame;
         fifo_get(kc_recv_fifo, frame);
