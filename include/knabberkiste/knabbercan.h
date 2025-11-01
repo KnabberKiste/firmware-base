@@ -78,11 +78,12 @@ typedef struct {
 } KC_Received_CommandFrame_t;
 
 /**
- * @brief Placeholder type for a knabberCAN response.
- * 
- * @todo implement this.
+ * @brief KnabberCAN response type.
  */
-typedef void KC_Response_t;
+typedef struct {
+    void* payload;
+    size_t payload_size;
+} KC_Response_t;
 
 /**
  * @brief Struct representing an error frome received from the knabberCAN bus.
