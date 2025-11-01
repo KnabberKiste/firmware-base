@@ -11,6 +11,7 @@
 #define KC_INTERNAL_EVENT_FIFO_SIZE 2
 #define KC_RECV_FIFO_SIZE 32
 #define KC_FRAME_COUNTER_MAX 7
+#define KC_LED_FLASH_TICKS 1
 
 /* Identifier bit-field struct */
 typedef union __attribute__((__packed__)) {
@@ -62,6 +63,8 @@ static KC_CommandCallback_t volatile kc_command_callbacks[KC_NUMBER_OF_TRANSACTI
 static KC_EventCallback_t volatile kc_event_callbacks[KC_NUMBER_OF_TRANSACTION_IDS] = { 0 };
 static volatile KC_State_t kc_state = KC_STATE_UNINITIALIZED;
 static KC_Received_Frame_t* kc_incomplete_frames = 0;
+static bool send_flag = false;
+static bool indicators_active = true;
 
 fifo_declare_qualifier(KC_Received_Frame_t, kc_recv_fifo, KC_RECV_FIFO_SIZE, static);
 
@@ -141,6 +144,7 @@ void can_recv_callback(CAN_ReceivedFrame_t frame) {
     kc_frame.receiver_address = identifier.components.receiver_address;
     kc_frame.transaction_id = identifier.components.transaction_id;
     kc_frame.previous_counter_value = identifier.components.counter;
+    kc_frame.payload = 0;
     
     varbuf_push_chunk(kc_frame.payload, &(frame.frame.data), frame.frame.dlc);
     kc_frame.payload_size = frame.frame.dlc;
@@ -252,6 +256,7 @@ static void kc_frame_transmit(
 
         id.components.counter = (id.components.counter + 1) % (KC_FRAME_COUNTER_MAX + 1);
     }
+    send_flag = true;
 }
 
 static void kc_address_end() {
@@ -394,9 +399,12 @@ void kc_event_emit(KC_TransactionID_t event_id, void* payload, size_t payload_si
 void kc_process_incoming() {
     kc_check_if_addressing_required();
 
+    bool received = false;
+
     while(!fifo_empty(kc_recv_fifo)) {
         KC_Received_Frame_t frame;
         fifo_get(kc_recv_fifo, frame);
+        received = true;
 
         switch(frame.frame_type) {
             case KC_FRAMETYPE_EVENT:
@@ -420,7 +428,17 @@ void kc_process_incoming() {
                     command_frame.receiver_address = frame.receiver_address;
                     command_frame.sender_address = frame.sender_address;
 
-                    kc_command_callbacks[frame.transaction_id](command_frame);
+                    KC_Response_t response = kc_command_callbacks[frame.transaction_id](command_frame);
+                    kc_frame_transmit(
+                        KC_FRAMETYPE_RESPONSE,
+                        command_frame.command_id,
+                        command_frame.sender_address,
+                        response.payload_size,
+                        response.payload
+                    );
+
+                    // Invalidate response payload buffer
+                    varbuf_clear(response.payload);
                 }
                 break; // TODO IMPLEMENT THIS
 
@@ -434,6 +452,26 @@ void kc_process_incoming() {
         // Deallocate the payload to avoid a memory leak
         varbuf_clear(frame.payload);
     }
+
+    // Set the LED state
+    static TickType_t last_send_tick = 0;
+    static TickType_t last_recv_tick = 0;
+    TickType_t current_tick = xTaskGetTickCount();
+    if(send_flag) {
+        last_send_tick = current_tick;
+        send_flag = false;
+    }
+    if(received) {
+        last_recv_tick = current_tick;
+        received = false;
+    }
+
+    bool send_led_on = (current_tick - last_send_tick < KC_LED_FLASH_TICKS) && indicators_active;
+    bool recv_led_on = (current_tick - last_recv_tick < KC_LED_FLASH_TICKS) && indicators_active;
+    KC_INLED_GREEN_PIN->output_data = send_led_on;
+    KC_OUTLED_GREEN_PIN->output_data = send_led_on;
+    KC_INLED_YELLOW_PIN->output_data = recv_led_on;
+    KC_OUTLED_YELLOW_PIN->output_data = recv_led_on;
 }
 
 static void kc_check_if_addressing_required() {
@@ -463,6 +501,7 @@ static bool kc_in_connected() {
     // LED pins must by Hi-Z for this
     KC_INLED_GREEN_PIN->mode = GPIO_MODE_ANALOG;
 
+    for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
     bool result = KC_CONN_IN_PIN->input_data;
 
     // Reset LED pins
@@ -474,6 +513,7 @@ static bool kc_out_connected() {
     // LED pins must by Hi-Z for this
     KC_OUTLED_GREEN_PIN->mode = GPIO_MODE_ANALOG;
 
+    for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
     bool result = KC_CONN_OUT_PIN->input_data;
 
     // Reset LED pins
