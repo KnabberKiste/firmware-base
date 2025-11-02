@@ -65,6 +65,7 @@ static volatile KC_State_t kc_state = KC_STATE_UNINITIALIZED;
 static KC_Received_Frame_t* kc_incomplete_frames = 0;
 static bool send_flag = false;
 static bool indicators_active = true;
+const char* kcan_fwr_name = "<unknown>";
 
 fifo_declare_qualifier(KC_Received_Frame_t, kc_recv_fifo, KC_RECV_FIFO_SIZE, static);
 
@@ -214,6 +215,30 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
             break;
     }
 }
+static KC_Response_t kc_internal_command_handler(KC_Received_CommandFrame_t command_frame) {
+    KC_Response_t response = { .payload = 0 };
+
+    switch(command_frame.command_id) {
+        case KC_COMMAND_RESET:
+            NVIC_SystemReset();
+            break;
+
+        case KC_COMMAND_SET_INDICATORS_ACTIVE:
+            indicators_active = *((bool*)command_frame.payload);
+            break;
+
+        case KC_COMMAND_READ_FWR_NAME:
+            varbuf_push_chunk(
+                response.payload,
+                kcan_fwr_name,
+                strlen(kcan_fwr_name)
+            );
+            response.payload_size = strlen(kcan_fwr_name);
+            break;
+    }
+
+    return response;
+}
 
 /* Internal function definitions */
 static void kc_request_addressing() {    
@@ -351,6 +376,9 @@ void kc_init() {
     kc_event_define(KC_EVENT_ADDRESSING_SUCCESS, kc_internal_event_handler);
     kc_event_define(KC_EVENT_ADDRESSING_FINISHED, kc_internal_event_handler);
     kc_event_define(KC_EVENT_ADDRESSING_REQUIRED, kc_internal_event_handler);
+    kc_command_define(KC_COMMAND_RESET, kc_internal_command_handler);
+    kc_command_define(KC_COMMAND_SET_INDICATORS_ACTIVE, kc_internal_command_handler);
+    kc_command_define(KC_COMMAND_READ_FWR_NAME, kc_internal_command_handler);
     
     /* Initialize the CAN peripheral */
     can_init(1000000, CAN_TESTMODE_NONE);

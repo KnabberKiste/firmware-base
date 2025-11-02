@@ -133,10 +133,10 @@ Which event has happened is indicated by the `TID` bits in the CAN identifier. T
 | :---------------- | :---------------- | :------------------------ |
 | **Addressing \*** |||
 | `0x00`            | `void`            | `ADDRESSING_START`        |
-| `0x02`            | `void`            | `ADDRESSING_SUCCESS`      |
-| `0x03`            | `void`            | `ADDRESSING_NEXT`         |
-| `0x04`            | `void`            | `ADDRESSING_FINISHED`     |
-| `0x05`            | `void`            | `ADDRESSING_REQUIRED`     |
+| `0x01`            | `void`            | `ADDRESSING_SUCCESS`      |
+| `0x02`            | `void`            | `ADDRESSING_NEXT`         |
+| `0x03`            | `void`            | `ADDRESSING_FINISHED`     |
+| `0x04`            | `void`            | `ADDRESSING_REQUIRED`     |
 | **Power control** |||
 | `0x10`            | `void`            | `ONLINE`                  |
 | **Application-defined events** |||

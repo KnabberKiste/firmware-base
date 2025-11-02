@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+/* Global variables */
+extern const char* kcan_fwr_name;
+
 /* Type definitions */
 /**
  * @brief Type used for knabberCAN transaction IDs.
@@ -74,14 +77,14 @@ typedef struct {
     /// @brief Size of the payload which is stored in @ref payload.
     size_t payload_size;
     /// @brief Pointer to a buffer storing the payload. This is allocated using @ref varbuf.h.
-    void* payload;
+    uint8_t* payload;
 } KC_Received_CommandFrame_t;
 
 /**
  * @brief KnabberCAN response type.
  */
 typedef struct {
-    void* payload;
+    uint8_t* payload;
     size_t payload_size;
 } KC_Response_t;
 
@@ -130,6 +133,20 @@ typedef KC_Response_t (*KC_CommandCallback_t)(KC_Received_CommandFrame_t);
  * @brief KnabberCAN `ONLINE` event ID.
  */
 #define KC_EVENT_ONLINE 0x10
+
+/* Command definitions */
+/**
+ * @brief KnabberCAN ``RESET`` command.
+ */
+#define KC_COMMAND_RESET 0x00
+/**
+ * @brief KnabberCAN ``SET INDICATORS ACTIVE`` command.
+ */
+#define KC_COMMAND_SET_INDICATORS_ACTIVE 0x10
+/**
+ * @brief KnabberCAN ``READ FWR NAME`` command.
+ */
+#define KC_COMMAND_READ_FWR_NAME 0x11
 
 /* Special addresses */
 /**
