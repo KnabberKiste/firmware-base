@@ -10,6 +10,9 @@
 #include <stdint.h>
 
 /* Global variables */
+/**
+ * @brief Name of the firmware reported upon receiving the ``READ FWR NAME`` command.
+ */
 extern const char* kcan_fwr_name;
 
 /* Type definitions */
@@ -84,7 +87,13 @@ typedef struct {
  * @brief KnabberCAN response type.
  */
 typedef struct {
+    /**
+     * @brief Pointer pointing to a buffer which contains the payload. This must either be a NULL pointer or a buffer allocated using @ref varbuf.h.
+     */
     uint8_t* payload;
+    /**
+     * @brief Size of the payload contained in the buffer which is pointed to by ``payload``.
+     */
     size_t payload_size;
 } KC_Response_t;
 
