@@ -134,7 +134,7 @@ void st7066u_return_home();
 /**
  * @brief Sets the operation which is applied when data is written to the ST7066U's DDRAM.
  * 
- * @param cursor_mode_direction Direction in which the address is moved, either decremented or incremented.
+ * @param direction Direction in which the address is moved, either decremented or incremented.
  * @param display_shift Whether the whole display should be shifted when a byte is written. This makes it look as if the cursor stands still and the display moves when each character is written to DDRAM.
  */
 void st7066u_set_entry_mode(ST7066U_MoveDirection_t direction, bool display_shift);
