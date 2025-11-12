@@ -12,69 +12,91 @@
 
 #ifdef __DOXYGEN__
 
-    /*
-    * Application-defined macro which expands to a GPIO definition.
+    /**
+    * @brief Application-defined macro which expands to a GPIO definition.
     *
+    * This must be configured in a file named `st7066u_config.h` in the include path.
+    * 
     * Configure this to the matching pin on the ST7066U.
     */    
     #define ST7066U_GPIO_RW /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_E /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_RS /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_DB0 /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_DB1 /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_DB2 /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_DB3 /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_DB4 /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_DB5 /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_DB6 /* application-specific */
-    /*
-     * Application-defined macro which expands to a GPIO definition.
+    /**
+     * @brief Application-defined macro which expands to a GPIO definition.
      *
+     * This must be configured in a file named `st7066u_config.h` in the include path.
+     * 
      * Configure this to the matching pin on the ST7066U.
     */
     #define ST7066U_GPIO_DB7 /* application-specific */
