@@ -1,41 +1,43 @@
 #include <knabberkiste/drivers/st7066u.h>
 #include <FreeRTOS.h>
-#include "st7066u_config.h"
 
-/* Macro checks  */
-#ifndef ST7066U_GPIO_RW
-    #error Please define ST7066U_GPIO_RW when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_E
-    #error Please define ST7066U_GPIO_E when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_RS
-    #error Please define ST7066U_GPIO_RS when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_DB0
-    #error Please define ST7066U_GPIO_DB0 when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_DB1
-    #error Please define ST7066U_GPIO_DB1 when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_DB2
-    #error Please define ST7066U_GPIO_DB2 when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_DB3
-    #error Please define ST7066U_GPIO_DB3 when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_DB4
-    #error Please define ST7066U_GPIO_DB4 when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_DB5
-    #error Please define ST7066U_GPIO_DB5 when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_DB6
-    #error Please define ST7066U_GPIO_DB6 when using the ST7066u driver.
-#endif
-#ifndef ST7066U_GPIO_DB7
-    #error Please define ST7066U_GPIO_DB7 when using the ST7066u driver.
-#endif
+#if __has_include("st7066u_config.h")
+    #include "st7066u_config.h"
+
+    /* Macro checks  */
+    #ifndef ST7066U_GPIO_RW
+        #error Please define ST7066U_GPIO_RW when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_E
+        #error Please define ST7066U_GPIO_E when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_RS
+        #error Please define ST7066U_GPIO_RS when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_DB0
+        #error Please define ST7066U_GPIO_DB0 when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_DB1
+        #error Please define ST7066U_GPIO_DB1 when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_DB2
+        #error Please define ST7066U_GPIO_DB2 when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_DB3
+        #error Please define ST7066U_GPIO_DB3 when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_DB4
+        #error Please define ST7066U_GPIO_DB4 when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_DB5
+        #error Please define ST7066U_GPIO_DB5 when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_DB6
+        #error Please define ST7066U_GPIO_DB6 when using the ST7066u driver.
+    #endif
+    #ifndef ST7066U_GPIO_DB7
+        #error Please define ST7066U_GPIO_DB7 when using the ST7066u driver.
+    #endif
 
 #define ST7066U_MODE_WRITE 0
 #define ST7066U_MODE_READ 1
@@ -132,3 +134,5 @@ void st7066u_set_cgram_address(uint8_t address) {
 void st7066u_set_ddram_address(uint8_t address) {
     st7066u_write_command(0x80 | (address & 0x7F));
 }
+
+#endif
