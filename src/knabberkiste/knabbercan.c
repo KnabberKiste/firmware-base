@@ -70,13 +70,6 @@ const char* kcan_fwr_name = "<unknown>";
 fifo_declare_qualifier(KC_Received_Frame_t, kc_recv_fifo, KC_RECV_FIFO_SIZE, static);
 
 /* Internal functions */
-static void kc_frame_transmit(
-    KC_FrameType_t frame_type,
-    KC_TransactionID_t tid,
-    KC_Address_t receiver,
-    size_t payload_size,
-    void* payload
-);
 static void kc_check_if_addressing_required();
 static bool kc_in_connected();
 static bool kc_out_connected();
@@ -247,7 +240,7 @@ static void kc_request_addressing() {
     kc_internal_event_handler(ef);
 }
 
-static void kc_frame_transmit(
+void kc_frame_transmit(
     KC_FrameType_t frame_type,
     KC_TransactionID_t tid,
     KC_Address_t receiver,

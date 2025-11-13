@@ -225,3 +225,20 @@ KC_State_t kc_get_state();
  * This calls all callbacks for commands and events.
  */
 void kc_process_incoming();
+
+/**
+ * @brief Transmits a single frame on the bus.
+ * 
+ * @param frame_type Type of the frame to transmit.
+ * @param tid Transaction ID to transmit.
+ * @param receiver Address of the receiving node.
+ * @param payload_size Size of the payload.
+ * @param payload Pointer to a payload buffer, if size > 0.
+ */
+void kc_frame_transmit(
+    KC_FrameType_t frame_type,
+    KC_TransactionID_t tid,
+    KC_Address_t receiver,
+    size_t payload_size,
+    void* payload
+);
