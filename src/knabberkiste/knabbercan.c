@@ -278,9 +278,6 @@ void kc_frame_transmit(
 }
 
 static void kc_address_end() {
-    // Addressing has been finished
-    kc_state = KC_STATE_READY;
-
     // Set the DAISY signal to be Hi-Z again
     KC_DAISY_OUT_PIN->mode = GPIO_MODE_INPUT;
     KC_DAISY_OUT_PIN->pull_mode = GPIO_NOPULL;
@@ -307,6 +304,9 @@ static void kc_address_end() {
             0b00000000000000000000000000000100 | kc_node_address << 3,
             0b00000000000000000000001111111110
         );
+
+        // Addressing has been finished
+        kc_state = KC_STATE_READY;
     } else {
         // Addressing hasn't been successful, request another addressing procedure
         kc_request_addressing();
