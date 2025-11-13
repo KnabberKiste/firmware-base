@@ -234,7 +234,7 @@ static KC_Response_t kc_internal_command_handler(KC_Received_CommandFrame_t comm
 }
 
 /* Internal function definitions */
-static void kc_request_addressing() {    
+static void kc_request_addressing() {
     KC_Received_EventFrame_t ef = { .event_id = KC_EVENT_ADDRESSING_REQUIRED, .payload = 0, .payload_size = 0, .sender_address = 0 };
     kc_event_emit(KC_EVENT_ADDRESSING_REQUIRED, 0, 0);
     kc_internal_event_handler(ef);
@@ -522,7 +522,7 @@ static bool kc_in_connected() {
     // LED pins must by Hi-Z for this
     KC_INLED_GREEN_PIN->mode = GPIO_MODE_ANALOG;
 
-    for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
+    for(uint16_t i = 0; i < UINT8_MAX; i++) __asm("NOP");
     bool result = KC_CONN_IN_PIN->input_data;
 
     // Reset LED pins
@@ -534,7 +534,7 @@ static bool kc_out_connected() {
     // LED pins must by Hi-Z for this
     KC_OUTLED_GREEN_PIN->mode = GPIO_MODE_ANALOG;
 
-    for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
+    for(uint16_t i = 0; i < UINT8_MAX; i++) __asm("NOP");
     bool result = KC_CONN_OUT_PIN->input_data;
 
     // Reset LED pins
