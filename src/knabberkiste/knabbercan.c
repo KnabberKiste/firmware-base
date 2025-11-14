@@ -522,7 +522,7 @@ static bool kc_in_connected() {
     // LED pins must by Hi-Z for this
     KC_INLED_GREEN_PIN->mode = GPIO_MODE_ANALOG;
 
-    for(uint16_t i = 0; i < UINT8_MAX; i++) __asm("NOP");
+    for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
     bool result = KC_CONN_IN_PIN->input_data;
 
     // Reset LED pins
@@ -534,7 +534,7 @@ static bool kc_out_connected() {
     // LED pins must by Hi-Z for this
     KC_OUTLED_GREEN_PIN->mode = GPIO_MODE_ANALOG;
 
-    for(uint16_t i = 0; i < UINT8_MAX; i++) __asm("NOP");
+    for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
     bool result = KC_CONN_OUT_PIN->input_data;
 
     // Reset LED pins
