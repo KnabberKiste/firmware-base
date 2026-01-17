@@ -157,6 +157,9 @@ void can_recv_callback(CAN_ReceivedFrame_t frame) {
 
 void can_error_callback(CAN_ErrorCode_t error_code) {
     // Errors are ignored by knabberCAN
+    char debug_str[64] = {};
+    snprintf(&debug_str, sizeof(debug_str), "KnabberCAN ignored the following error code: %d", error_code);
+    vcp_println(debug_str);
 }
 
 /* Event and command handlers */
