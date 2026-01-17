@@ -172,6 +172,10 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
                 kc_node_address = event_frame.sender_address + 1;
 
                 vcp_println("Node address received!");
+
+                // Make sure the DAISY_OUT pin is pulled up again
+                KC_DAISY_OUT_PIN->output_data = 1;
+                for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
                 
                 // Address the next node
                 kc_event_emit(KC_EVENT_ADDRESSING_SUCCESS, 0, 0);
