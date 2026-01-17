@@ -204,6 +204,8 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
                 // addressing procedure
                 kc_node_address = 1;
                 kc_address_next();
+            } else {
+                vcp_println("Indicated readyness for addressing procedure.");
             }
             break;
     }
@@ -315,13 +317,10 @@ static void kc_address_end() {
 
 static void kc_address_next() {
     if(kc_out_connected()) {
-        vcp_println("Addressing next node...");
+        // Give the next node some time to be ready
+        for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
 
-        // There's at least one more node in the chain
-        // Wait for the next node to be ready for addressing
-        KC_DAISY_OUT_PIN->mode = GPIO_MODE_INPUT;
-        KC_DAISY_OUT_PIN->pull_mode = GPIO_NOPULL;
-        while(!KC_DAISY_OUT_PIN->input_data);
+        vcp_println("Addressing next node...");
 
         // Pull down the DAISY signal for the next node
         KC_DAISY_OUT_PIN->mode = GPIO_MODE_OUTPUT;
