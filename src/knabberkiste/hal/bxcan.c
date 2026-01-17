@@ -9,7 +9,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BXCAN_TX_QUEUE_SIZE 4
+#define BXCAN_TX_QUEUE_SIZE 32
 
 fifo_declare_qualifier(CAN_Frame_t, bxcan_tx_queue, BXCAN_TX_QUEUE_SIZE, static);
 
