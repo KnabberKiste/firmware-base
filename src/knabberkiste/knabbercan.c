@@ -104,7 +104,7 @@ void can_recv_callback(CAN_ReceivedFrame_t frame) {
             if(identifier.components.first) error_throw(ERR_KC_INVALID_FRAME, "Previous frame incomplete.");
 
             // Check the frame counter
-            uint8_t expected_frame_counter = (incomplete_frame->previous_counter_value + 1) % (KC_FRAME_COUNTER_MAX - 1);
+            uint8_t expected_frame_counter = (incomplete_frame->previous_counter_value + 1) % (KC_FRAME_COUNTER_MAX + 1);
             if(expected_frame_counter != identifier.components.counter) {
                 error_throw(ERR_KC_INVALID_FRAME, "Frame counter error.");
             }
