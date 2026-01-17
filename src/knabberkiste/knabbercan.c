@@ -66,6 +66,7 @@ static KC_Received_Frame_t* kc_incomplete_frames = 0;
 static bool send_flag = false;
 static bool indicators_active = true;
 static bool waiting_for_next_node_to_be_addressed = false;
+static bool already_addressed = false;
 const char* kcan_fwr_name = "<unknown>";
 
 fifo_declare_qualifier(KC_Received_Frame_t, kc_recv_fifo, KC_RECV_FIFO_SIZE, static);
@@ -168,11 +169,12 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
             break;
 
         case KC_EVENT_ADDRESSING_NEXT:
-            if(KC_DAISY_IN_PIN->input_data == 0) {
+            if(KC_DAISY_IN_PIN->input_data == 0 && !already_addressed) {
                 // This is the node currently being addressed.
                 kc_node_address = event_frame.sender_address + 1;
 
                 vcp_println("Node address received!");
+                already_addressed = already_addressed;
                 
                 // Address the next node
                 kc_event_emit(KC_EVENT_ADDRESSING_SUCCESS, 0, 0);
@@ -197,6 +199,8 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
         case KC_EVENT_ADDRESSING_REQUIRED:
             // Ignore requests while already addressing
             if(kc_state == KC_STATE_ADDRESSING) { break; }
+            
+            already_addressed = false;
 
             // Indicate readyness for addressing
             kc_state = KC_STATE_ADDRESSING;
