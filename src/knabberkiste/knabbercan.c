@@ -65,6 +65,7 @@ static volatile KC_State_t kc_state = KC_STATE_UNINITIALIZED;
 static KC_Received_Frame_t* kc_incomplete_frames = 0;
 static bool send_flag = false;
 static bool indicators_active = true;
+static bool waiting_for_next_node_to_be_addressed = false;
 const char* kcan_fwr_name = "<unknown>";
 
 fifo_declare_qualifier(KC_Received_Frame_t, kc_recv_fifo, KC_RECV_FIFO_SIZE, static);
@@ -172,10 +173,6 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
                 kc_node_address = event_frame.sender_address + 1;
 
                 vcp_println("Node address received!");
-
-                // Make sure the DAISY_OUT pin is pulled up again
-                KC_DAISY_OUT_PIN->output_data = 1;
-                for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
                 
                 // Address the next node
                 kc_event_emit(KC_EVENT_ADDRESSING_SUCCESS, 0, 0);
@@ -184,6 +181,11 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
             break;
 
         case KC_EVENT_ADDRESSING_SUCCESS:
+            waiting_for_next_node_to_be_addressed = false;
+
+            // Make sure the DAISY_OUT pin is pulled up again
+            KC_DAISY_OUT_PIN->output_data = 1;
+            for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
             break;
 
         case KC_EVENT_ADDRESSING_START:
@@ -331,6 +333,10 @@ static void kc_address_next() {
         KC_DAISY_OUT_PIN->output_data = 0;
 
         kc_event_emit(KC_EVENT_ADDRESSING_NEXT, 0, 0);
+        waiting_for_next_node_to_be_addressed = true;
+
+        // Give the next node some time to respond
+        for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
     } else {
         // This is the last node in the chain
         // Notify the other nodes that the addressing has been finished
@@ -424,6 +430,11 @@ void kc_process_incoming() {
     kc_check_if_addressing_required();
 
     bool received = false;
+
+    if(waiting_for_next_node_to_be_addressed && fifo_empty(kc_recv_fifo)) {
+        vcp_println("Didn't react, retrying...");
+        kc_address_next();
+    }
 
     while(!fifo_empty(kc_recv_fifo)) {
         KC_Received_Frame_t frame;
