@@ -286,6 +286,7 @@ void kc_frame_transmit(
         memcpy(frame.data, payload + payload_offset, dlc);
 
         can_transmit_frame(&frame);
+        can_flush_tx_buffer();
 
         id.components.counter = (id.components.counter + 1) % (KC_FRAME_COUNTER_MAX + 1);
     }

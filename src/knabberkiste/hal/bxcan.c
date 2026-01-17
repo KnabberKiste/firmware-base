@@ -238,6 +238,10 @@ void can_transmit_frame(CAN_Frame_t* frame) {
     }
 }
 
+void can_flush_tx_buffer() {
+    while(!fifo_empty(bxcan_tx_queue));
+}
+
 CAN_ReceivedFrame_t can_read_frame_from_fifo(CAN_FIFO_t fifo) {
     CAN_FIFOMailBox_TypeDef* mailbox = &(CAN->sFIFOMailBox[fifo]);
 

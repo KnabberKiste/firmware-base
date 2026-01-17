@@ -237,3 +237,9 @@ void can_recv_callback(CAN_ReceivedFrame_t frame) __attribute__((weak));
  * @param error_code Error code which caused the interrupt.
  */
 void can_error_callback(CAN_ErrorCode_t error_code) __attribute__((weak));
+
+/**
+ * @brief Waits for the transmit buffer to be empty.
+ * 
+ */
+void can_flush_tx_buffer();
