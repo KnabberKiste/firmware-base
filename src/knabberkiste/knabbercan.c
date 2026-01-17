@@ -174,7 +174,7 @@ static void kc_internal_event_handler(KC_Received_EventFrame_t event_frame) {
                 kc_node_address = event_frame.sender_address + 1;
 
                 vcp_println("Node address received!");
-                already_addressed = already_addressed;
+                already_addressed = true;
                 
                 // Address the next node
                 kc_event_emit(KC_EVENT_ADDRESSING_SUCCESS, 0, 0);
