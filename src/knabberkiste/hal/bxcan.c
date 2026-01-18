@@ -15,6 +15,8 @@ fifo_declare_qualifier(CAN_Frame_t, bxcan_tx_queue, BXCAN_TX_QUEUE_SIZE, static)
 
 // Internal functions
 CAN_ReceivedFrame_t can_read_frame_from_fifo(CAN_FIFO_t fifo);
+static void can_transmit_frame_direct(CAN_Frame_t* frame);
+static void can_transmit_next_if_possible();
 
 // Interrupt handlers
 void USB_HP_CAN_TX_IRQHandler() {
@@ -29,11 +31,7 @@ void USB_HP_CAN_TX_IRQHandler() {
     CLEAR_MASK(CAN->TSR, CAN_TSR_TXOK0 | CAN_TSR_TXOK1 | CAN_TSR_TXOK2);
 
     // Transmit the next message in the transmit queue
-    if(!fifo_empty(bxcan_tx_queue)) {
-        CAN_Frame_t nextFrame;
-        fifo_get(bxcan_tx_queue, nextFrame);
-        can_transmit_frame(&nextFrame);
-    }
+    can_transmit_next_if_possible();
 }
 
 void USB_LP_CAN_RX0_IRQHandler() {
@@ -206,40 +204,57 @@ void can_transmit_frame(CAN_Frame_t* frame) {
     bool mailbox_free = READ_MASK(CAN->TSR, CAN_TSR_TME);
 
     if(mailbox_free) {
-        critical_block {
-            uint8_t mailbox_id = READ_MASK_OFFSET(CAN->TSR, 0b11, CAN_TSR_CODE_Pos);
-            CAN_TxMailBox_TypeDef* mailbox = &(CAN->sTxMailBox[mailbox_id]);
-
-            // Set the identifier register
-            WRITE_BIT(mailbox->TIR, CAN_TI0R_RTR_Pos, frame->rtr);
-            WRITE_BIT(mailbox->TIR, CAN_TI0R_IDE_Pos, frame->id_extended);
-
-            if(frame->id_extended) {
-                // Configure the extended ID
-                WRITE_MASK_OFFSET(mailbox->TIR, 0x3FFFFFFF, frame->id, CAN_TI0R_EXID_Pos);
-            } else {
-                // Configure the standard ID
-                WRITE_MASK_OFFSET(mailbox->TIR, 0x7FFUL, frame->id, CAN_TI0R_STID_Pos);
-            }
-
-            // Set the data length control register
-            WRITE_MASK_OFFSET(mailbox->TDTR, 0xF, frame->dlc, CAN_TDT0R_DLC_Pos);
-
-            // Set the data low register
-            mailbox->TDLR = ((uint32_t*)(frame->data))[0];
-            mailbox->TDHR = ((uint32_t*)(frame->data))[1];
-
-            // Set the transmit request bit
-            SET_MASK(mailbox->TIR, CAN_TI0R_TXRQ);
-        }
+        can_transmit_frame_direct(frame);
     } else {
         // Append the frame to the transmit queue
         fifo_put(bxcan_tx_queue, *frame);
     }
 }
 
+static void can_transmit_frame_direct(CAN_Frame_t* frame) {
+    critical_block {
+        uint8_t mailbox_id = READ_MASK_OFFSET(CAN->TSR, 0b11, CAN_TSR_CODE_Pos);
+        CAN_TxMailBox_TypeDef* mailbox = &(CAN->sTxMailBox[mailbox_id]);
+
+        // Set the identifier register
+        WRITE_BIT(mailbox->TIR, CAN_TI0R_RTR_Pos, frame->rtr);
+        WRITE_BIT(mailbox->TIR, CAN_TI0R_IDE_Pos, frame->id_extended);
+
+        if(frame->id_extended) {
+            // Configure the extended ID
+            WRITE_MASK_OFFSET(mailbox->TIR, 0x3FFFFFFF, frame->id, CAN_TI0R_EXID_Pos);
+        } else {
+            // Configure the standard ID
+            WRITE_MASK_OFFSET(mailbox->TIR, 0x7FFUL, frame->id, CAN_TI0R_STID_Pos);
+        }
+
+        // Set the data length control register
+        WRITE_MASK_OFFSET(mailbox->TDTR, 0xF, frame->dlc, CAN_TDT0R_DLC_Pos);
+
+        // Set the data low register
+        mailbox->TDLR = ((uint32_t*)(frame->data))[0];
+        mailbox->TDHR = ((uint32_t*)(frame->data))[1];
+
+        // Set the transmit request bit
+        SET_MASK(mailbox->TIR, CAN_TI0R_TXRQ);
+    }
+}
+
+static void can_transmit_next_if_possible() {
+    critical_block {
+        bool mailbox_free = READ_MASK(CAN->TSR, CAN_TSR_TME);
+        if(!fifo_empty(bxcan_tx_queue) && mailbox_free) {
+            CAN_Frame_t nextFrame;
+            fifo_get(bxcan_tx_queue, nextFrame);
+            can_transmit_frame_direct(&nextFrame);
+        }
+    }
+}
+
 void can_flush_tx_buffer() {
-    while(!fifo_empty(bxcan_tx_queue));
+    while(!fifo_empty(bxcan_tx_queue)) {
+        for(uint16_t i = 0; i < UINT16_MAX; i++) __asm("NOP");
+    }
 }
 
 CAN_ReceivedFrame_t can_read_frame_from_fifo(CAN_FIFO_t fifo) {
